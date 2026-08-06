@@ -1,4 +1,3 @@
 {
-  "Name": "GateOpened",
   "ClassName": "RemoteEvent"
 }
