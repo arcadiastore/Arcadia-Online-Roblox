@@ -76,6 +76,7 @@ function DungeonController:Start()
 		if processed then return end
 		if input.KeyCode == Enum.KeyCode.L then
 			self._lobbyScreen.Enabled = not self._lobbyScreen.Enabled
+			print("[DungeonController] Lobby toggled:", self._lobbyScreen.Enabled)
 		end
 	end)
 end
@@ -224,9 +225,13 @@ function DungeonController:_connectLobbyButtons()
 			btn.Text = "..."
 			btn.Active = false
 
+			print("[DungeonController] Requesting enter:", dungeonId)
+
 			local ok, result = pcall(function()
 				return self._remoteEnter:InvokeServer(dungeonId)
 			end)
+
+			print("[DungeonController] Result:", ok, result)
 
 			if ok and result and result.success then
 				self._lobbyScreen.Enabled = false
@@ -234,7 +239,12 @@ function DungeonController:_connectLobbyButtons()
 			else
 				btn.Text = "ENTER"
 				btn.Active = true
-				local reason = (ok and result and result.reason) or "Gagal"
+				local reason = "Gagal masuk dungeon"
+				if not ok then
+					reason = "Error: " .. tostring(result)
+				elseif result and result.reason then
+					reason = result.reason
+				end
 				self:_showToast(reason, Color3.fromRGB(200, 60, 60))
 			end
 		end)
