@@ -169,11 +169,12 @@ task.spawn(function()
 		print("  ℹ️  (Reset data player di DataStore untuk test level-up)")
 
 		-- Test EXP overflow di max level
+		local oldExp = data.Exp
 		local r1 = LevelService:AddExp(player, 100)
 		print(("  📊 AddExp(100) di max level: gained=%d, Lv%d, EXP=%d"):format(
 			r1.levelsGained, r1.newLevel, r1.newExp))
 		assert_eq("Level tetap max", r1.newLevel, LevelCurve.MaxLevel)
-		assert_true("EXP tetap naik", r1.newExp > data.Exp)
+		assert_true("EXP tetap naik", r1.newExp > oldExp)
 	else
 		print(("  📊 Start: Lv%d, EXP=%d"):format(data.Level, data.Exp))
 
