@@ -2,15 +2,6 @@
 	JobChangeService/init.lua
 	Server-side Job Change system — naikkan kelas dari Tier 1→2→3.
 
-	Alur:
-	  1. Player panggil TryJobChange()
-	  2. Service cek: sudah punya ClassId? bukan Tier 3?
-	  3. Ambil class config → lihat jobChange.nextClassId
-	  4. Cek syarat: Level >= requiredLevel
-	  5. Cek Quest: CompletedQuests[requiredQuestId]
-	  6. Update ClassId, ClassTier
-	  7. Return sukses + info class baru
-
 	Remote: Character/JobChange (Function, rate-limited 2s)
 	Dependency: DataService, Classes config
 ]]
@@ -23,30 +14,23 @@ local ClassesConfig = require(ReplicatedStorage:WaitForChild("Configs"):WaitForC
 
 local DATA_SERVICE_NAME = "DataService"
 local REMOTE_NAME = "Character/JobChange"
-local COOLDOWN_SECONDS = 2
 
 local JobChangeService = BaseService:Extend("JobChangeService")
 
 function JobChangeService:Init()
 	BaseService.Init(self)
-	RemoteValidator.new(REMOTE_NAME)
 end
 
 function JobChangeService:Start()
 	BaseService.Start(self)
 
-	local ds = BaseService.GetServiceByName(DATA_SERVICE_NAME)
-	if not ds then
-		warn("[JobChangeService] DataService not found!")
-		return
-	end
+	local remotesFolder = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Character")
+	local jobChangeRemote = remotesFolder:WaitForChild("JobChange")
+	local validator = RemoteValidator.new(REMOTE_NAME, 2)
 
-	ds:BindRemoteEvent(REMOTE_NAME, function(player)
-		if self:_isOnCooldown(player) then
-			return { success = false, reason = "Cooldown aktif" }
-		end
-		self:_setCooldown(player)
-		return self:TryJobChange(player)
+	local self_ref = self
+	jobChangeRemote.OnServerInvoke = validator:WrapHandler(function(player)
+		return self_ref:TryJobChange(player)
 	end)
 end
 
@@ -54,7 +38,7 @@ end
 -- PUBLIC API (direct call)
 -- ==========================================
 
-function JobChangeService.TryJobChange(player: Player): { [string]: any }
+function JobChangeService:TryJobChange(player: Player): { [string]: any }
 	local ds = BaseService.GetServiceByName(DATA_SERVICE_NAME)
 	local profile = ds and ds.WaitForProfile(player, 10)
 	if not profile then
@@ -103,7 +87,6 @@ function JobChangeService.TryJobChange(player: Player): { [string]: any }
 		return { success = false, reason = "Class tujuan tidak valid: " .. tostring(nextClassId) }
 	end
 
-	-- === SUKSES ===
 	local previousClassId = profile.ClassId
 	profile.ClassId = nextClassId
 	profile.ClassTier = nextClass.tier
@@ -114,27 +97,6 @@ function JobChangeService.TryJobChange(player: Player): { [string]: any }
 		newTier = nextClass.tier,
 		previousClassId = previousClassId,
 	}
-end
-
--- ==========================================
--- INTERNAL: Cooldown
--- ==========================================
-
-function JobChangeService:_isOnCooldown(player): boolean
-	local cd = self._cooldowns and self._cooldowns[player.UserId]
-	if not cd then return false end
-	return (tick() - cd) < COOLDOWN_SECONDS
-end
-
-function JobChangeService:_setCooldown(player)
-	if not self._cooldowns then self._cooldowns = {} end
-	self._cooldowns[player.UserId] = tick()
-end
-
-function JobChangeService:OnPlayerRemoving(player)
-	if self._cooldowns then
-		self._cooldowns[player.UserId] = nil
-	end
 end
 
 return JobChangeService

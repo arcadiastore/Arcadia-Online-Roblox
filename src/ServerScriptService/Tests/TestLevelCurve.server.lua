@@ -288,7 +288,7 @@ task.spawn(function()
 
 	-- 5a. Job change tanpa class (reset profile dulu)
 	DataService.ResetToTemplate(player)
-	DataService:ForceRefresh(player)
+	task.wait(0.2)
 	data = DataService.GetProfile(player)
 
 	local j1 = JobChangeService.TryJobChange(player)
