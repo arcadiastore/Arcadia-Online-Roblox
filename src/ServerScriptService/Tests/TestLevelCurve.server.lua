@@ -291,7 +291,7 @@ task.spawn(function()
 	task.wait(0.2)
 	data = DataService.GetProfile(player)
 
-	local j1 = JobChangeService.TryJobChange(player)
+	local j1 = JobChangeService:TryJobChange(player)
 	print(("  📊 TryJobChange tanpa class: %s (%s)"):format(tostring(j1.success), tostring(j1.reason)))
 	assert_true("No class → tolak", not j1.success)
 
@@ -306,14 +306,14 @@ task.spawn(function()
 		data.RaceId, data.ClassId, data.Level, data.ClassTier or 1))
 
 	-- 5c. Warrior→Knight (Level15, quest required)
-	local j2 = JobChangeService.TryJobChange(player)
+	local j2 = JobChangeService:TryJobChange(player)
 	print(("  📊 Warrior→Knight tanpa quest: %s (%s)"):format(tostring(j2.success), tostring(j2.reason)))
 	assert_true("Quest belum → tolak", not j2.success)
 
 	-- 5d. Tambah quest, coba lagi
 	if not data.CompletedQuests then data.CompletedQuests = {} end
 	data.CompletedQuests["Q_JobChange_Knight"] = true
-	local j3 = JobChangeService.TryJobChange(player)
+	local j3 = JobChangeService:TryJobChange(player)
 	print(("  📊 Warrior→Knight + quest: %s, newClass=%s, tier=%d"):format(
 		tostring(j3.success), tostring(j3.newClassId), j3.newTier or 0))
 	assert_true("Knight sukses", j3.success)
@@ -321,13 +321,13 @@ task.spawn(function()
 	assert_eq("Tier = 2", j3.newTier, 2)
 
 	-- 5e. Knight→Warlord (Level40, quest required)
-	local j4 = JobChangeService.TryJobChange(player)
+	local j4 = JobChangeService:TryJobChange(player)
 	print(("  📊 Knight→Warlord tanpa quest: %s (%s)"):format(tostring(j4.success), tostring(j4.reason)))
 	assert_true("Warlord quest belum → tolak", not j4.success)
 
 	-- 5f. Tambah quest, coba lagi
 	data.CompletedQuests["Q_JobChange_Warlord"] = true
-	local j5 = JobChangeService.TryJobChange(player)
+	local j5 = JobChangeService:TryJobChange(player)
 	print(("  📊 Knight→Warlord + quest: %s, newClass=%s, tier=%d"):format(
 		tostring(j5.success), tostring(j5.newClassId), j5.newTier or 0))
 	assert_true("Warlord sukses", j5.success)
@@ -335,7 +335,7 @@ task.spawn(function()
 	assert_eq("Tier = 3", j5.newTier, 3)
 
 	-- 5g. Warlord = tier max, tidak bisa naik lagi
-	local j6 = JobChangeService.TryJobChange(player)
+	local j6 = JobChangeService:TryJobChange(player)
 	print(("  📊 Warlord→lagi: %s (%s)"):format(tostring(j6.success), tostring(j6.reason)))
 	assert_true("Tier max → tolak", not j6.success)
 	assert_eq("Tier = 3", j6.tier, 3)
