@@ -21,10 +21,7 @@ function GateController:Init()
 	local remotesFolder = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Gate")
 	self._requestOpen = remotesFolder:WaitForChild("RequestOpen")
 
-	local GateConfirmUI = require(ReplicatedStorage:WaitForChild("Configs").Parent
-		:WaitForChild("StarterGui") and nil or nil) -- placeholder, load below
-
-	-- Load UI module from StarterGui
+	-- Load GateConfirm UI (from StarterGui service, synced ke PlayerGui)
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 	local uiFolder = playerGui:WaitForChild("UI", 10)
 	if uiFolder then
