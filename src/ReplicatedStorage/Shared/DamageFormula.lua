@@ -17,7 +17,7 @@
 	ANTI-CHEAT: Semua parameter dihitung di server.
 ]]
 
-local ElementsConfig = require(script.Parent:WaitForChild("Elements"))
+local ElementsConfig = require(script.Parent.Parent:WaitForChild("Configs"):WaitForChild("Elements"))
 
 local DamageFormula = {}
 
