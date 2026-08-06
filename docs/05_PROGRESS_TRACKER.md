@@ -55,6 +55,20 @@ _(Tambahkan baris baru bila ada sistem baru yang mulai dikerjakan — jangan hap
 ## 2. Session Log
 _(Entri terbaru di paling atas. Format lihat `04_AI_AGENT_RULES.md` §3.)_
 
+### [2026-08-06] Test fresh reset v5 — Character Creation + LevelService (49/49 ✅)
+- Dikerjakan: test full flow dari fresh state (Lv1, Race=nil, Class=nil).
+  - Reset profile ke fresh state sebelum test.
+  - BAGIAN 2: 13 test character creation — SelectClass ditolak tanpa Race,
+    RerollRace, ConfirmRace (valid/invalid/idempotent), stat bonus Human
+    (STR 5→7), SelectClass (valid/Tier2 invalid/idempotent), CreationStatus.
+  - BAGIAN 3: 12 test LevelService — AddExp kecil (belum level-up), level
+    1→2 (STR naik), multiple level-up ke Lv42, AllocateCP valid/invalid.
+  - Total: 24 config + 13 creation + 12 level = 49 passed, 0 failed.
+- Fix: `Enum.Font.Cinzel` → `Enum.Font.GothamBlack` di CharacterCreation UI.
+- File yang disentuh:
+  `src/ServerScriptService/Tests/TestLevelCurve.server.lua` (v5),
+  `src/StarterGui/UI/CharacterCreation/init.lua` (font fix).
+
 ### [2026-08-06] LevelService + AllocateCP — tested ✅
 - Dikerjakan: implementasi & testing LevelService dan Combat Points allocation.
   - `LevelService.lua`: extends BaseService. API: `AddExp(player, amount)`,
