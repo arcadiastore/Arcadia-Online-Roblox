@@ -103,7 +103,20 @@ function DataService.WaitForProfile(player, timeoutSeconds)
 		end
 		task.wait(0.25)
 	end
-	return DataService.GetProfile(player)
+	-- (HANYA untuk testing/debug) Reset profile ke template + persist ke DataStore.
+-- Jangan panggil di production.
+function DataService.ResetToTemplate(player)
+	local profile = playerProfiles[player.UserId]
+	if not profile then return false end
+
+	-- Deep copy template supaya tidak mengacu ke table yang sama
+	local fresh = TableUtil.DeepCopy(ProfileTemplate)
+	profile.Data = fresh
+	profile:Save()
+	return true
+end
+
+return DataService.GetProfile(player)
 end
 
 --[[
@@ -152,6 +165,19 @@ function DataService:Start()
 	end)
 
 	RemoteHandlers.Setup(DataService)
+end
+
+-- (HANYA untuk testing/debug) Reset profile ke template + persist ke DataStore.
+-- Jangan panggil di production.
+function DataService.ResetToTemplate(player)
+	local profile = playerProfiles[player.UserId]
+	if not profile then return false end
+
+	-- Deep copy template supaya tidak mengacu ke table yang sama
+	local fresh = TableUtil.DeepCopy(ProfileTemplate)
+	profile.Data = fresh
+	profile:Save()
+	return true
 end
 
 return DataService

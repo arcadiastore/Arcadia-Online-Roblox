@@ -129,21 +129,19 @@ task.spawn(function()
 	end
 
 	-- ========================================
-	-- RESET ke fresh state
+	-- RESET ke fresh state (persist ke DataStore)
 	-- ========================================
 	section("RESET: Profile ke fresh state")
 	print(("  Sebelum: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d, EXP=%d"):format(
 		data.Level, tostring(data.RaceId), tostring(data.ClassId),
 		data.Stats.STR, data.UnspentCombatPoints, data.Exp))
 
-	data.RaceId = nil
-	data.ClassId = nil
-	data.Level = 1
-	data.Exp = 0
-	data.Stats = { STR = 5, VIT = 5, INT = 5, AGI = 5, LUK = 5 }
-	data.UnspentCombatPoints = 0
-	data.AllocatedPoints = { STR = 0, VIT = 0, INT = 0, AGI = 0, LUK = 0 }
+	local ok = DataService.ResetToTemplate(player)
+	assert_true("ResetToTemplate sukses", ok)
 
+	-- Re-read data setelah reset
+	task.wait(0.2)
+	data = DataService.GetProfile(player)
 	print(("  Sesudah: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d, EXP=%d"):format(
 		data.Level, tostring(data.RaceId), tostring(data.ClassId),
 		data.Stats.STR, data.UnspentCombatPoints, data.Exp))
