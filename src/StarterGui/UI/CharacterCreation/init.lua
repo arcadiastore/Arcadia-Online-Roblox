@@ -120,8 +120,8 @@ local function newLabel(props)
 	l.TextXAlignment = props.TextXAlignment or Enum.TextXAlignment.Center
 	l.TextYAlignment = props.TextYAlignment or Enum.TextYAlignment.Center
 	l.Size = props.Size or UDim2.new(1, 0, 0, 24)
-	l.Position = props.Position
-	l.AnchorPoint = props.AnchorPoint
+	if props.Position then l.Position = props.Position end
+	if props.AnchorPoint then l.AnchorPoint = props.AnchorPoint end
 	l.TextWrapped = props.TextWrapped
 	l.RichText = props.RichText
 	l.LayoutOrder = props.LayoutOrder or 0
