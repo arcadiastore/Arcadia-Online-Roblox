@@ -35,6 +35,9 @@
         "$className": "StarterPlayerScripts",
         "Controllers": {
           "$path": "src/StarterPlayerScripts/Controllers"
+        },
+        "MainController": {
+          "$path": "src/StarterPlayerScripts/MainController.client.lua"
         }
       }
     },

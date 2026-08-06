@@ -9,8 +9,8 @@
 |---|---|---|
 | Struktur project Rojo | 🔄 | Skeleton folder + `default.project.json` + Config kosong sudah dibuat. Belum ada logic Service/Controller. |
 | DataStore / Profile system | 🔄 | Implementasi kode selesai (ProfileStore session-locked + DataService + migrasi v1→v2 + remote `Data/GetProfile`). Belum ✅ karena belum dites manual di Roblox Studio (syarat wajib `04_AI_AGENT_RULES.md` §2). |
-| Service/Controller pattern dasar | ⬜ | |
-| Remote validation framework dasar | ⬜ | |
+| Service/Controller pattern dasar | 🔄 | `BaseService.lua` + `BaseController.lua` + lifecycle (Init/Start) + registry inter-service. DataService sudah di-refactor extends BaseService. `Main.server.lua` & `MainController.client.lua` bootstrap 3-phase (Register→Init→Start). Belum ✅ karena belum dites manual di Studio. |
+| Remote validation framework dasar | 🔄 | `RemoteValidator.lua` (Shared) — type check, range check, rate limit, WrapHandler anti-stacktrace-leak. DataService RemoteHandlers sudah dipakai. Belum ✅ karena belum dites manual. |
 
 ### Karakter & Progression
 | Sistem | Status | Catatan |
@@ -18,8 +18,8 @@
 | Desain Ras final (5 ras) | ✅ | Data di `Configs/Races.lua`. Lihat `01_GDD.md` §8.1 |
 | Desain Kelas combat final (6 jalur, Tier 1–3) | ✅ | Data di `Configs/Classes.lua`. Lihat `01_GDD.md` §8.2 (5 jalur awal + **Assassin→Shadowblade→Nightstalker**) |
 | Desain Profesi non-combat final (Craftsman) | ✅ | Data di `Configs/Professions.lua`. Lihat `01_GDD.md` §8.4. Terpisah dari Job Tier combat |
-| Character creation (pilih Ras) — implementasi | ⬜ | Data sudah siap, logic Service belum |
-| Character creation (pilih Kelas) — implementasi | ⬜ | Data sudah siap, logic Service belum |
+| Character creation (pilih Ras) — implementasi | 🔄 | `CharacterService` + remotes `RerollRace`/`ConfirmRace`/`CreationStatus`. RNG berbobot di server. Stat bonus ras diterapkan ke profile saat konfirmasi. Belum ✅ karena belum dites manual di Studio. |
+| Character creation (pilih Kelas) — implementasi | 🔄 | Remote `SelectClass` di `CharacterService`. Validasi Tier 1 only. Belum ✅ karena belum dites manual. |
 | Sistem stat & Combat Points — implementasi | ⬜ | |
 | Leveling / EXP curve | ⬜ | `Configs/LevelCurve.lua` masih skeleton kosong |
 | Job change — implementasi | ⬜ | Syarat per tier sudah ada di `Configs/Classes.lua`, logic belum |
@@ -54,6 +54,107 @@ _(Tambahkan baris baru bila ada sistem baru yang mulai dikerjakan — jangan hap
 
 ## 2. Session Log
 _(Entri terbaru di paling atas. Format lihat `04_AI_AGENT_RULES.md` §3.)_
+
+### [2026-08-06] Service/Controller pattern + RemoteValidator + CharacterService
+- Dikerjakan: implementasi infrastruktur dasar arsitektur Service/Controller
+  dan validasi remote, sekaligus implementasi Character Creation Service.
+  - `BaseService.lua` (`ServerScriptService/Services/`): pola dasar Service
+    server — `Extend()`, lifecycle `Init()`/`Start()`, registry global
+    `RegisterService()`/`BindRegistry()`, lazy cross-reference
+    `GetService()`. Semua Service baru wajib mewarisi dari modul ini.
+  - `BaseController.lua` (`StarterPlayerScripts/Controllers/`): mirror
+    client-side BaseService — lifecycle Init/Start, registry, `GetController()`.
+  - `RemoteValidator.lua` (`ReplicatedStorage/Shared/`): util validasi
+    argumen remote generik — type check, string length, number range,
+    integer check, table maxEntries, rate limit per-player (debounce),
+    `WrapHandler()` anti-stacktrace-leak (pcall + warn di server,
+    `{ error = "..." }` aman ke client). Dipakai oleh semua RemoteHandlers.
+  - `CharacterService.lua` (`ServerScriptService/Services/CharacterService/`):
+    service pembuatan karakter — 4 RemoteFunction:
+    `RerollRace` (RNG berbobot server-side, 0.5s debounce),
+    `ConfirmRace` (validasi raceId di Config + terapkan stat bonus ras),
+    `SelectClass` (validasi classId di Config + tier == 1),
+    `CreationStatus` (cek status RaceId/ClassId). Player tidak bisa
+    mengubah Ras/Kelas setelah dikonfirmasi (idempotensi).
+  - Refactor `DataService/init.lua`: extends `BaseService`, lifecycle
+    `Init()` (flag only) → `Start()` (connect events + BindToClose +
+    RemoteHandlers).
+  - Refactor `DataService/RemoteHandlers.lua`: pakai `RemoteValidator`
+    mengganti implementasi rate-limit sendiri.
+  - `Main.server.lua`: bootstrap 3-phase (Register → Init → Start)
+    dengan BaseService, mendaftarkan DataService + CharacterService.
+  - `MainController.client.lua`: bootstrap mirror client-side dengan
+    BaseController (Register → Init → Start), untuk saat ini belum ada
+    Controller aktif.
+  - Remote model `.model.json` baru untuk 4 remote Character
+    (`RerollRace`, `ConfirmRace`, `SelectClass`, `CreationStatus`).
+  - `default.project.json`: tambah entry `MainController` di
+    StarterPlayerScripts.
+- File yang disentuh:
+  `docs/02_TDD.md` (§5 tambah 4 baris remote Character),
+  `src/ReplicatedStorage/Shared/RemoteValidator.lua` (baru),
+  `src/ServerScriptService/Services/BaseService.lua` (baru),
+  `src/ServerScriptService/Services/DataService/init.lua` (refactor
+    extends BaseService, Init→Start split),
+  `src/ServerScriptService/Services/DataService/RemoteHandlers.lua`
+    (refactor pakai RemoteValidator),
+  `src/ServerScriptService/Services/CharacterService/init.lua` (baru),
+  `src/ServerScriptService/Main.server.lua` (refactor 3-phase +
+    daftar CharacterService),
+  `src/ReplicatedStorage/Remotes/Character/*.model.json` (4 file baru),
+  `src/StarterPlayerScripts/Controllers/BaseController.lua` (baru),
+  `src/StarterPlayerScripts/MainController.client.lua` (baru),
+  `default.project.json` (tambah MainController entry).
+- Status sistem yang berubah:
+  - Service/Controller pattern dasar ⬜→🔄
+  - Remote validation framework dasar ⬜→🔄
+  - Character creation (pilih Ras) ⬜→🔄
+  - Character creation (pilih Kelas) ⬜→🔄
+  - DataStore / Profile system tetap 🔄 (refactor ke BaseService,
+    tidak mengubah behavior — RemoteHandlers sekarang pakai RemoteValidator
+    tapi logic rate-limit & deep-copy identik).
+- Diketahui belum selesai / next step:
+  - **Semua sistem baru belum diuji manual di Roblox Studio** (AI tidak
+    punya akses runtime). Wajib Play Solo sebelum ditandai ✅: test
+    bootstrap Init/Start order, test RerollRace RNG distribution,
+    test ConfirmRace stat bonus, test SelectClass validation,
+    test idempotensi (tidak bisa re-pilih setelah confirm), test
+    CreationStatus, test anti-exploit (kirim argumen tipe salah,
+    classId Tier 2, raceId tidak ada di Config).
+  - `BaseService`/`BaseController` belum ✅ karena belum terbukti di
+    runtime Studio — baru terbukti secara kode (pattern diterapkan
+    konsisten ke DataService, tidak ada syntax error obvious).
+  - `RemoteValidator` belum ✅ karena belum terbukti live — rate limit
+    & error wrapping baru diverifikasi secara kode.
+  - **LevelCurve.lua** masih skeleton — belum ada formula EXP per level
+    (syarat sebelum leveling/combat bisa jalan).
+  - `CharacterController` (client-side UI) belum diimplementasikan —
+    saat ini hanya ada infrastruktur server. UI character creation
+    (tombol Reroll, daftar ras, daftar kelas) perlu diimplementasikan
+    terpisah di StarterPlayerScripts/StarterGui.
+  - Refactor DataService ke BaseService mengubah cara Init dipanggil
+    (dari `DataService.Init()` ke `DataService:Init()` via BaseService)
+    — perlu verifikasi di Studio bahwa tidak ada side effect.
+- Catatan risiko/exploit yang perlu direview manusia:
+  - `Character/ConfirmRace`: stat bonus ras dijumlahkan langsung ke
+    `data.Stats[stat]` — kalau ada migrasi yang me-reset Stats atau
+    field Stats di-replace (bukan di-update), bonus bisa hilang.
+    Saat ini tidak ada risiko karena tidak ada operasi lain yang
+    me-reset Stats, tapi perlu diingat kalau ada sistem reset stat
+    di kemudian hari.
+  - `Character/SelectClass`: tidak ada validation `RaceId` dipilih
+    sebelum `ClassId` (hanya cek `RaceId ~= nil`) — ini sengaja
+    karena Ras dan Kelas bebas dikombinasikan (GDD §8.1: "Kombinasi
+    Ras × Kelas bebas dipilih pemain").
+  - `Character/RerollRace`: unlimited reroll untuk saat ini (tidak ada
+    cost currency/reroll token) — bisa ditambah nanti kalau ada
+    mekanik monetisasi reroll (GDD §17). Tidak ada batasan jumlah
+    reroll per session, hanya rate limit 0.5s antar panggilan.
+  - Race stat bonus: Angel (-3 STR) dan Evil (-4 LUK, -2 AGI) bisa
+    membuat stat di bawah 0 kalau base stat sangat rendah. Saat ini
+    base stat = 5 (ProfileTemplate), jadi minimum Angel STR = 2,
+    Evil LUK = 1, Evil AGI = 3 — masih positif, tapi perlu
+    dipertimbangkan kalau ada sistem yang mengurangi stat lebih jauh.
 
 ### [2026-08-06] Implementasi DataStore / Profile system
 - Dikerjakan: implementasi penuh sistem penyimpanan data pemain sesuai

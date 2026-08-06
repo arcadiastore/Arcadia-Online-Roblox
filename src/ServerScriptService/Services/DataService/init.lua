@@ -8,6 +8,7 @@
 	item/currency yang bertambah tercatat via satu jalur Service resmi").
 
 	Dipanggil oleh: src/ServerScriptService/Main.server.lua (bootstrap).
+	Mewarisi BaseService (lifecycle Init/Start, inter-service reference).
 
 	API publik (server-only):
 	  DataService.GetProfile(player)                    -> table Data | nil (nil = belum siap/gagal load)
@@ -19,6 +20,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
+local BaseService = require(script.Parent.Parent:WaitForChild("Services"):WaitForChild("BaseService"))
 local ProfileStore = require(ServerStorage.Private.ProfileStore)
 local ProfileTemplate = require(ReplicatedStorage.Configs.ProfileTemplate)
 local ProfileMigrations = require(script.ProfileMigrations)
@@ -26,7 +28,7 @@ local RemoteHandlers = require(script.RemoteHandlers)
 local TableUtil = require(ReplicatedStorage.Shared.TableUtil)
 local DataConstants = require(ReplicatedStorage.Shared.DataConstants)
 
-local DataService = {}
+local DataService = BaseService:Extend("DataService")
 
 local store = ProfileStore.New(DataConstants.ProfileStoreName, ProfileTemplate)
 
@@ -104,7 +106,22 @@ function DataService.WaitForProfile(player, timeoutSeconds)
 	return DataService.GetProfile(player)
 end
 
-function DataService.Init()
+--[[
+	Override BaseService:Init — siapkan state internal, JANGAN hubungkan
+	event player atau remote belum. Service lain mungkin belum Init().
+]]
+function DataService:Init()
+	BaseService.Init(self) -- tandai flag _initialized
+	-- store & state sudah diinisialisasi di level modul (atas), cukup.
+end
+
+--[[
+	Override BaseService:Start — hubungkan event player, BindToClose, dan
+	remote. Semua Service sudah Init() saat ini dipanggil.
+]]
+function DataService:Start()
+	BaseService.Start(self) -- tandai flag _started
+
 	Players.PlayerAdded:Connect(onPlayerAdded)
 	Players.PlayerRemoving:Connect(onPlayerRemoving)
 

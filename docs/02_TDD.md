@@ -41,6 +41,10 @@ src/
 ## 5. Remote Events / Functions
 | Nama Remote | Arah | Payload | Validasi Server Wajib |
 |---|---|---|---|
+| `Character/RerollRace` | Client→Server (Function) | - (tidak ada argumen) | rate-limited (0.5s debounce); RNG dihitung di server berdasarkan bobot di `Configs/Races.lua`; hanya bisa dipanggil jika `RaceId == nil` (belum pilih ras) |
+| `Character/ConfirmRace` | Client→Server (Function) | raceId (string) | tipe argumen string; `raceId` divalidasi ada di `Configs/Races.lua`; hanya jika `RaceId == nil`; stat bonus ras diterapkan server-side |
+| `Character/SelectClass` | Client→Server (Function) | classId (string) | tipe argumen string; `classId` divalidasi ada di `Configs/Classes.lua` dan `tier == 1`; hanya jika sudah punya `RaceId` dan `ClassId == nil` |
+| `Character/CreationStatus` | Client→Server (Function) | - (tidak ada argumen) | rate-limited (1s debounce); hanya kirim status milik pemain sendiri (`hasRace`, `hasClass`) |
 | `Combat/RequestAttack` | Client→Server | targetId, skillId | cooldown, jarak, LOS, kepemilikan skill, mana cukup |
 | `Inventory/UseItem` | Client→Server | itemId | kepemilikan item, jumlah, cooldown item |
 | `Quest/Accept` | Client→Server | questId | syarat level/prasyarat quest terpenuhi |

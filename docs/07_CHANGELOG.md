@@ -17,6 +17,66 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] Service/Controller pattern, RemoteValidator, CharacterService
+### Ditambahkan
+- `BaseService.lua` (`ServerScriptService/Services/`): pola dasar Service
+  server — `Extend(name)`, lifecycle `Init()`/`Start()` dengan flag guard
+  (tidak bisa dipanggil dua kali), registry global `RegisterService()`/
+  `BindRegistry()`, lazy cross-reference `GetService(name)`. Semua Service
+  baru wajib mewarisi dari modul ini.
+- `BaseController.lua` (`StarterPlayerScripts/Controllers/`): mirror
+  client-side BaseService — lifecycle Init/Start, registry `RegisterController()`
+  /`BindRegistry()`, lazy `GetController(name)`.
+- `RemoteValidator.lua` (`ReplicatedStorage/Shared/`): util validasi argumen
+  remote generik — type check (`typeof`), string length (min/max), number
+  range (min/max/integer), table maxEntries, rate limit per-player (debounce
+  clock), `Validate(player, rules)` → `true|false, error`, `WrapHandler(fn)`
+  → pcall wrapper anti-stacktrace-leak, `CleanupPlayer(player)`.
+- `CharacterService.lua` (`ServerScriptService/Services/CharacterService/`):
+  service pembuatan karakter — 4 RemoteFunction:
+  - `RerollRace`: RNG berbobot server-side (weight dari `Configs/Races.lua`),
+    0.5s debounce, hanya bisa dipanggil jika `RaceId == nil`.
+  - `ConfirmRace`: validasi `raceId` di Config, terapkan stat bonus ras
+    langsung ke `data.Stats`, idempotensi (tidak bisa re-pilih).
+  - `SelectClass`: validasi `classId` di Config + `tier == 1`, syarat
+    sudah punya `RaceId`, idempotensi.
+  - `CreationStatus`: kirim `{ hasRace, hasClass }`, 1s debounce.
+- Remote model `.model.json` untuk 4 remote Character:
+  `RerollRace`, `ConfirmRace`, `SelectClass`, `CreationStatus`.
+- `MainController.client.lua` (`StarterPlayerScripts/`): bootstrap
+  client-side 3-phase (Register → Init → Start) dengan BaseController.
+  Untuk saat ini belum ada Controller aktif (placeholder).
+- Entry `MainController` di `default.project.json` (StarterPlayerScripts).
+### Diubah
+- `DataService/init.lua`: refactor extends `BaseService` — lifecycle
+  dipecah `Init()` (flag only) dan `Start()` (connect events, BindToClose,
+  RemoteHandlers). Behavior tidak berubah, hanya pola yang diterapkan.
+- `DataService/RemoteHandlers.lua`: refactor pakai `RemoteValidator.new()`
+  + `WrapHandler()` mengganti implementasi rate-limit sendiri — behavior
+  identik (same debounce value dari `DataConstants`), hanya kode yang lebih
+  konsisten.
+- `Main.server.lua`: refactor dari `DataService.Init()` manual ke pola
+  3-phase BaseService (Register → Init → Start), mendaftarkan
+  DataService + CharacterService.
+- `docs/02_TDD.md` §5: tambah 4 baris remote Character ke tabel Remote
+  Events/Functions.
+### Catatan Teknis / Risiko
+- **Semua sistem baru belum dites manual di Roblox Studio** — AI tidak
+  punya akses runtime. Wajib Play Solo sebelum menandai ✅ (lihat skenario
+  uji di `05_PROGRESS_TRACKER.md` session log).
+- `BaseService`/`BaseController` dan `RemoteValidator` baru terbukti secara
+  kode (pattern diterapkan konsisten, tidak ada syntax error obvious),
+  belum terbukti di runtime.
+- Refactor DataService ke BaseService mengubah cara Init dipanggil
+  (dari `DataService.Init()` ke `DataService:Init()` via BaseService)
+  — perlu verifikasi di Studio.
+- `Character/ConfirmRace`: stat bonus ras dijumlahkan langsung ke
+  `data.Stats[stat]` — kalau ada operasi yang me-reset/mengganti Stats
+  (bukan update), bonus bisa hilang. Saat ini tidak ada risiko karena
+  tidak ada operasi lain yang me-reset Stats.
+- `Character/RerollRace`: unlimited reroll (tanpa cost) — bisa ditambah
+  nanti untuk mekanik monetisasi (GDD §17). Hanya rate limit 0.5s.
+
 ## [2026-08-06] Implementasi DataStore / Profile system
 ### Ditambahkan
 - `ProfileStore.lua` (`ServerStorage/Private`): engine DataStore
