@@ -800,7 +800,7 @@ task.spawn(function()
 
 	-- 10e. Level up ke Lv15 untuk CorruptedGrove
 	for i = 1, 15 do
-		LevelService:AddExp(player, LevelCurveConfig.CalculateRequiredExp(i))
+		LevelService:AddExp(player, LevelCurve.GetRequiredExp(i))
 	end
 	task.wait(0.1)
 	data = DataService.GetProfile(player)
