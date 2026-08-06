@@ -28,8 +28,8 @@
 | Sistem | Status | Catatan |
 |---|---|---|
 | Desain Element Chart final | ✅ | Data di `Configs/Elements.lua`. Lihat `01_GDD.md` §9 |
-| Sistem elemen — implementasi combat | ⬜ | Data sudah siap, logic Service belum |
-| Sistem combat dasar (attack + skill) | ⬜ | |
+| Sistem elemen — implementasi combat | ✅ | `Elements.lua` config + `DamageFormula.lua` (pure function): element multiplier 1.5x strong, 0.5x weak. Tested. |
+| Sistem combat dasar (attack + skill) | ✅ | `CombatService.lua`: ProcessAttack, SpawnEnemy, GetAvailableSkills. `DamageFormula.lua`: STR/INT scaling, crit (LUK), defense reduction. `Skills.lua`: 21 skill (6 class lines). `Enemies.lua`: 12 enemy (3 zones). Remote `Combat/RequestAttack`, `Combat/GetSkills`. Tested 102/102. |
 | Desain Zona & Gate final (Millhaven → Shattered Sanctum) | ✅ | Lihat `01_GDD.md` §6, data gate di `Configs/Gates.lua` |
 | Gate/Portal system — implementasi | ✅ | `GateService.lua` (server): validasi syarat Level/Quest/Item, unlock gate, simpan ke `UnlockedGates`. Remote `Gate/RequestOpen` (rate-limited 1s). Tested: fake gate ditolak, LevelAndQuest (level OK + quest), idempotent unlock, Frostpeak ditolak (no quest). 3D portal builder + GateUI confirm + GateController. |
 | Zona 1 (Millhaven) — build/implementasi | ⬜ | |

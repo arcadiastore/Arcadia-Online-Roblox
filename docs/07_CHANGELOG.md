@@ -17,6 +17,24 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] CombatService + DamageFormula — tested ✅
+### Ditambahkan
+- `CombatService/init.lua` (ServerScriptService/Services): server-authoritative
+  combat. API: `ProcessAttack`, `SpawnEnemy`, `ResetEnemy`, `GetAvailableSkills`,
+  `GetEnemyStatus`. Server-side enemy state, cooldown tracking, mana system.
+  Remote `Combat/RequestAttack`, `Combat/GetSkills`.
+- `DamageFormula.lua` (ReplicatedStorage/Shared): pure function damage calc.
+  STR/INT scaling (1.5x), element multiplier (1.5x strong/0.5x weak),
+  defense reduction (`100/(100+def)`), crit rate from LUK (5% + 0.5%/LUK, cap 50%).
+- `Skills.lua`: 21 skill definitions (Warrior/Knight/Warlord, Assassin/Shadowblade/
+  Nightstalker, Mage/Elementalist/Archmage, Healer/Priest/HighPriest, Archer/Ranger/
+  Deadeye, Defender/Guardian/Sentinel). DamageType Physical/Magical, Target Single/AoE.
+- `Enemies.lua`: 12 enemy definitions (Millhaven Lv1-8, Duskwood Lv12-40, Frostpeak
+  Lv28-40). Stats, defense, element, exp/currency rewards.
+- Remote model: `Combat/RequestAttack`, `Combat/GetSkills`.
+
+---
+
 ## [2026-08-06] QuestService — tested ✅
 ### Ditambahkan
 - `QuestService/init.lua` (ServerScriptService/Services): server-authoritative
