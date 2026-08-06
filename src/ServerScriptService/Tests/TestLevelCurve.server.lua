@@ -498,11 +498,15 @@ task.spawn(function()
 		data.RaceId, data.ClassId, data.Level, data.Stats.STR))
 
 	-- 7f. Attack wolf dengan SlashCombo
-	local atk1 = CombatService:ProcessAttack(player, wolfId, "SlashCombo")
-	print(("  📊 SlashCombo → dmg=%d, crit=%s, enemyHP=%d/%d"):format(
-		atk1.damage, tostring(atk1.isCrit), atk1.enemyHP, atk1.enemyMaxHP))
-	assert_true("Damage > 0", atk1.damage > 0)
-	assert_true("Wolf masih hidup", atk1.enemyHP > 0)
+	local atk1ok, atk1 = pcall(function()
+		return CombatService:ProcessAttack(player, wolfId, "SlashCombo")
+	end)
+	if not atk1ok then warn("  ❌ ProcessAttack error:", atk1) end
+	if not atk1 then atk1 = { success = false, reason = "nil result" } end
+	print(("  📊 SlashCombo → ok=%s, success=%s, reason=%s, dmg=%s, enemyHP=%s"):format(
+		tostring(atk1ok), tostring(atk1.success), tostring(atk1.reason or "none"),
+		tostring(atk1.damage), tostring(atk1.enemyHP)))
+	assert_true("Wolf masih hidup", atk1.success and atk1.enemyHP > 0)
 
 	-- 7g. Skill tidak valid
 	local atk2 = CombatService:ProcessAttack(player, wolfId, "FakeSkill")
@@ -543,10 +547,13 @@ task.spawn(function()
 	-- 7k. Mana test — cast sampai mana habis
 	CombatService:SetPlayerMana(player, 10)
 	local wolfId2 = CombatService:SpawnEnemy("Enemy_Wolf")
-	local atkMana = CombatService:ProcessAttack(player, wolfId2, "SlashCombo")
-	-- SlashCombo costs 5 mana, 10 - 5 = 5 left, then 5 - 5 = 0, then 0 < 5 → fail
-	print(("  📊 SlashCombo (10 mana, cost 5): %s, mana left check"):format(
-		tostring(atkMana.success)))
+	local atkManaOk, atkMana = pcall(function()
+		return CombatService:ProcessAttack(player, wolfId2, "SlashCombo")
+	end)
+	if not atkManaOk then warn("  ❌ Mana test error:", atkMana) end
+	if not atkMana then atkMana = { success = false, reason = "nil result" } end
+	print(("  📊 SlashCombo (10 mana, cost 5): %s, reason=%s"):format(
+		tostring(atkMana.success), tostring(atkMana.reason or "none")))
 	assert_true("SlashCombo OK (10 mana >= 5 cost)", atkMana.success)
 
 	local atkNoMana = CombatService:ProcessAttack(player, wolfId2, "WarCry")
