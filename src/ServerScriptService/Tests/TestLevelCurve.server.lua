@@ -1,6 +1,6 @@
 --[[
-	TestLevelCurve.server.lua (v4 — full otomatis)
-	Tinggal Play Solo, cek Output.
+	TestLevelCurve.server.lua (v5 — fresh reset + full flow)
+	Play Solo, cek Output. Reset data ke fresh state sebelum test.
 
 	HAPUS file ini sebelum publish ke production.
 ]]
@@ -97,14 +97,13 @@ section("Race + Base combo")
 assert_eq("Angel STR lv1", LevelCurve.GetBaseStats(1).STR + RacesConfig.Angel.statBonus.STR, 2)
 assert_true("Angel STR > 0", LevelCurve.GetBaseStats(1).STR + RacesConfig.Angel.statBonus.STR > 0)
 
--- Summary bagian 1
 print("\n" .. string.rep("=", 60))
 print(("BAGIAN 1: %d passed, %d failed"):format(passed, failed))
 if failed == 0 then print("🎉 LevelCurve ALL PASS!") end
 print(string.rep("=", 60))
 
 -- ============================================================
--- BAGIAN 2 & 3: CharacterService + LevelService (tunggu player)
+-- BAGIAN 2 & 3: CharacterService + LevelService (fresh test)
 -- ============================================================
 task.spawn(function()
 	local player = Players.PlayerAdded:Wait()
@@ -114,6 +113,7 @@ task.spawn(function()
 	local CharacterService = require(ServerScriptService.Services.CharacterService)
 	local LevelService = require(ServerScriptService.Services.LevelService)
 
+	-- Tunggu profile
 	local data = nil
 	for i = 1, 30 do
 		data = DataService.GetProfile(player)
@@ -128,94 +128,163 @@ task.spawn(function()
 		return
 	end
 
-	print(("  ✅ Profile: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d"):format(
+	-- ========================================
+	-- RESET ke fresh state
+	-- ========================================
+	section("RESET: Profile ke fresh state")
+	print(("  Sebelum: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d, EXP=%d"):format(
 		data.Level, tostring(data.RaceId), tostring(data.ClassId),
-		data.Stats.STR, data.UnspentCombatPoints))
+		data.Stats.STR, data.UnspentCombatPoints, data.Exp))
 
-	-- === Character creation (kalau belum) ===
-	if not data.RaceId or not data.ClassId then
-		section("BAGIAN 2: Character Creation (auto)")
+	data.RaceId = nil
+	data.ClassId = nil
+	data.Level = 1
+	data.Exp = 0
+	data.Stats = { STR = 5, VIT = 5, INT = 5, AGI = 5, LUK = 5 }
+	data.UnspentCombatPoints = 0
+	data.AllocatedPoints = { STR = 0, VIT = 0, INT = 0, AGI = 0, LUK = 0 }
 
-		local r1 = CharacterService.RerollRace(player)
-		print(("  📊 Reroll: %s (%s)"):format(tostring(r1.raceId), tostring(r1.rarity)))
-		assert_true("Reroll sukses", r1.success)
+	print(("  Sesudah: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d, EXP=%d"):format(
+		data.Level, tostring(data.RaceId), tostring(data.ClassId),
+		data.Stats.STR, data.UnspentCombatPoints, data.Exp))
+	assert_true("RaceId nil", data.RaceId == nil)
+	assert_true("ClassId nil", data.ClassId == nil)
+	assert_true("Level 1", data.Level == 1)
 
-		if r1.success then
-			local r2 = CharacterService.ConfirmRace(player, r1.raceId)
-			print(("  📊 ConfirmRace: %s"):format(tostring(r2.success)))
-			assert_true("ConfirmRace sukses", r2.success)
-		end
+	-- ========================================
+	-- BAGIAN 2: Character Creation (full flow)
+	-- ========================================
+	section("BAGIAN 2: Character Creation")
 
-		local r3 = CharacterService.SelectClass(player, "Warrior")
-		print(("  📊 SelectClass: %s"):format(tostring(r3.success)))
-		assert_true("SelectClass sukses", r3.success)
+	-- 2a. Sebelum pilih ras, SelectClass harus ditolak
+	local rejectClass = CharacterService.SelectClass(player, "Warrior")
+	print(("  📊 SelectClass sebelum Race: %s (%s)"):format(
+		tostring(rejectClass.success), tostring(rejectClass.reason)))
+	assert_true("SelectClass ditolak tanpa Race", not rejectClass.success)
 
-		task.wait(0.5)
-		data = DataService.GetProfile(player)
-		print(("  📊 Setelah creation: Race=%s, Class=%s, STR=%d"):format(
-			tostring(data.RaceId), tostring(data.ClassId), data.Stats.STR))
-	else
-		print(("  ℹ️  Sudah ada: %s/%s — skip creation"):format(
-			tostring(data.RaceId), tostring(data.ClassId)))
-	end
+	-- 2b. RerollRace
+	local r1 = CharacterService.RerollRace(player)
+	print(("  📊 Reroll: %s (%s, bonus=%s)"):format(
+		tostring(r1.raceId), tostring(r1.rarity),
+		r1.statBonus and tostring(r1.statBonus.STR) or "?"))
+	assert_true("Reroll sukses", r1.success)
+	assert_true("RaceId masih nil", data.RaceId == nil) -- reroll tidak mengubah profile
 
-	-- === LevelService tests ===
-	section("BAGIAN 3: LevelService")
+	-- 2c. ConfirmRace (tolak raceId invalid)
+	local badRace = CharacterService.ConfirmRace(player, "FakeRace123")
+	print(("  📊 ConfirmRace('FakeRace123'): %s (%s)"):format(
+		tostring(badRace.success), tostring(badRace.reason)))
+	assert_true("FakeRace ditolak", not badRace.success)
 
-	local isMaxLevel = data.Level >= LevelCurve.MaxLevel
+	-- 2d. ConfirmRace (pakai race hasil reroll)
+	local raceToPick = r1.raceId or "Human"
+	local r2 = CharacterService.ConfirmRace(player, raceToPick)
+	print(("  📊 ConfirmRace('%s'): %s"):format(raceToPick, tostring(r2.success)))
+	assert_true("ConfirmRace sukses", r2.success)
 
-	if isMaxLevel then
-		print(("  ℹ️  Player sudah Lv%d (max) — skip level-up test"):format(data.Level))
-		print("  ℹ️  (Reset data player di DataStore untuk test level-up)")
+	local raceBonus = RacesConfig[raceToPick].statBonus
+	local expectedSTR = 5 + (raceBonus.STR or 0)
+	print(("  📊 STR sesudah: %d (base 5 + race %d)"):format(
+		data.Stats.STR, raceBonus.STR or 0))
+	assert_eq("STR sesudah confirm", data.Stats.STR, expectedSTR)
 
-		-- Test EXP overflow di max level
-		local oldExp = data.Exp
-		local r1 = LevelService:AddExp(player, 100)
-		print(("  📊 AddExp(100) di max level: gained=%d, Lv%d, EXP=%d"):format(
-			r1.levelsGained, r1.newLevel, r1.newExp))
-		assert_eq("Level tetap max", r1.newLevel, LevelCurve.MaxLevel)
-		assert_true("EXP tetap naik", r1.newExp > oldExp)
-	else
-		print(("  📊 Start: Lv%d, EXP=%d"):format(data.Level, data.Exp))
+	-- 2e. ConfirmRace lagi harus ditolak (idempotensi)
+	local r2b = CharacterService.ConfirmRace(player, "Human")
+	print(("  📊 ConfirmRace lagi: %s (%s)"):format(
+		tostring(r2b.success), tostring(r2b.reason)))
+	assert_true("ConfirmRace idempotent", not r2b.success)
 
-		-- AddExp kecil
-		local r1 = LevelService:AddExp(player, 1)
-		print(("  📊 +1 EXP → Lv%d, EXP=%d"):format(r1.newLevel, r1.newExp))
+	-- 2f. RerollRace lagi harus ditolak (sudah punya race)
+	local r1b = CharacterService.RerollRace(player)
+	print(("  📊 RerollRace lagi: %s (%s)"):format(
+		tostring(r1b.success), tostring(r1b.reason)))
+	assert_true("RerollRace idempotent", not r1b.success)
 
-		-- AddExp cukup untuk level-up
-		local need = LevelCurve.GetRequiredExp(data.Level)
-		local r2 = LevelService:AddExp(player, need + 100)
-		print(("  📊 +%d EXP → gained=%d, Lv%d"):format(need + 100, r2.levelsGained, r2.newLevel))
-		assert_true("Level naik", r2.levelsGained >= 1)
+	-- 2g. SelectClass (tolak class invalid)
+	local badClass = CharacterService.SelectClass(player, "FakeClass")
+	print(("  📊 SelectClass('FakeClass'): %s (%s)"):format(
+		tostring(badClass.success), tostring(badClass.reason)))
+	assert_true("FakeClass ditolak", not badClass.success)
 
-		-- Multiple level-up
-		local r3 = LevelService:AddExp(player, 50000)
-		print(("  📊 +50000 → gained=%d, Lv%d"):format(r3.levelsGained, r3.newLevel))
-		assert_true("Multiple level-up", r3.levelsGained >= 1)
-	end
+	-- 2h. SelectClass (tolak Tier 2)
+	local tier2Class = CharacterService.SelectClass(player, "Knight")
+	print(("  📊 SelectClass('Knight' T2): %s (%s)"):format(
+		tostring(tier2Class.success), tostring(tier2Class.reason)))
+	assert_true("Tier 2 ditolak", not tier2Class.success)
 
-	-- AllocateCP (selalu test, mau max level atau tidak)
-	local cp = LevelService:GetUnspentPoints(player)
-	print(("  📊 UnspentCP: %d"):format(cp))
+	-- 2i. SelectClass (Warrior)
+	local r3 = CharacterService.SelectClass(player, "Warrior")
+	print(("  📊 SelectClass('Warrior'): %s"):format(tostring(r3.success)))
+	assert_true("SelectClass sukses", r3.success)
 
-	if cp > 0 then
-		local a1 = LevelService.AllocateCP(player, "STR")
-		print(("  📊 AllocateCP('STR'): %s, sisa=%s"):format(
-			tostring(a1.success), tostring(a1.unspentPoints)))
-		assert_true("AllocateCP sukses", a1.success)
-		assert_true("CP berkurang", a1.unspentPoints < cp)
-	else
-		print("  ℹ️  CP = 0 — skip AllocateCP test (butuh level-up dulu)")
-	end
+	-- 2j. SelectClass lagi harus ditolak (idempotensi)
+	local r3b = CharacterService.SelectClass(player, "Mage")
+	print(("  📊 SelectClass lagi: %s (%s)"):format(
+		tostring(r3b.success), tostring(r3b.reason)))
+	assert_true("SelectClass idempotent", not r3b.success)
 
+	-- 2k. CreationStatus
+	local status = CharacterService.GetCreationStatus(player)
+	print(("  📊 Status: hasRace=%s, hasClass=%s"):format(
+		tostring(status.hasRace), tostring(status.hasClass)))
+	assert_true("Status hasRace", status.hasRace)
+	assert_true("Status hasClass", status.hasClass)
+
+	print(("  📊 FINAL creation: Race=%s, Class=%s, STR=%d"):format(
+		tostring(data.RaceId), tostring(data.ClassId), data.Stats.STR))
+
+	-- ========================================
+	-- BAGIAN 3: LevelService (fresh from Lv1)
+	-- ========================================
+	section("BAGIAN 3: LevelService (from Lv1)")
+
+	print(("  📊 Start: Lv%d, EXP=%d, STR=%d, CP=%d"):format(
+		data.Level, data.Exp, data.Stats.STR, data.UnspentCombatPoints))
+
+	-- 3a. AddExp kecil (tidak cukup level-up)
+	local r4 = LevelService:AddExp(player, 1)
+	print(("  📊 +1 EXP → Lv%d, EXP=%d, gained=%d"):format(
+		r4.newLevel, r4.newExp, r4.levelsGained))
+	assert_eq("Belum level-up", r4.levelsGained, 0)
+
+	-- 3b. AddExp cukup untuk 1 level-up
+	local need = LevelCurve.GetRequiredExp(1) -- EXP needed lv1→2
+	local r5 = LevelService:AddExp(player, need)
+	print(("  📊 +%d EXP → Lv%d, EXP=%d, gained=%d"):format(
+		need, r5.newLevel, r5.newExp, r5.levelsGained))
+	assert_true("Level 1→2", r5.levelsGained >= 1)
+	assert_true("STR naik", data.Stats.STR > expectedSTR)
+
+	local strAtLv2 = data.Stats.STR
+	print(("  📊 STR di Lv%d: %d"):format(data.Level, data.Stats.STR))
+
+	-- 3c. Multiple level-up sekaligus
+	local r6 = LevelService:AddExp(player, 50000)
+	print(("  📊 +50000 EXP → Lv%d, gained=%d, EXP=%d"):format(
+		r6.newLevel, r6.levelsGained, r6.newExp))
+	assert_true("Multiple level-up", r6.levelsGained >= 1)
+
+	local cpAfter = LevelService:GetUnspentPoints(player)
+	print(("  📊 UnspentCP setelah level-up: %d"):format(cpAfter))
+	assert_true("CP > 0", cpAfter > 0)
+
+	-- 3d. AllocateCP
+	local a1 = LevelService.AllocateCP(player, "STR")
+	print(("  📊 AllocateCP('STR'): %s, sisa=%s"):format(
+		tostring(a1.success), tostring(a1.unspentPoints)))
+	assert_true("AllocateCP sukses", a1.success)
+	assert_true("CP berkurang", a1.unspentPoints < cpAfter)
+
+	-- 3e. AllocateCP invalid
 	local a2 = LevelService.AllocateCP(player, "INVALID")
 	print(("  📊 AllocateCP('INVALID'): %s (%s)"):format(
 		tostring(a2.success), tostring(a2.reason)))
 	assert_true("INVALID ditolak", not a2.success)
 
 	-- Final
-	print(("\n  📊 FINAL: Lv%d, STR=%d, CP=%d, EXP=%d"):format(
-		data.Level, data.Stats.STR, data.UnspentCombatPoints, data.Exp))
+	print(("\n  📊 FINAL: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d, EXP=%d"):format(
+		data.Level, tostring(data.RaceId), tostring(data.ClassId),
+		data.Stats.STR, data.UnspentCombatPoints, data.Exp))
 
 	-- ============================================================
 	-- SUMMARY
