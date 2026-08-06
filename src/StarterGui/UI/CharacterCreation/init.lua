@@ -210,7 +210,7 @@ function CharacterCreationUI:Mount(playerGui)
 	glow.Name = "PortalGlow"
 	glow.AnchorPoint = Vector2.new(0.5, 0)
 	glow.Position = UDim2.new(0.5, 0, 0, -180)
-	glow.Size = UDim2.new(0, 620, 0, 620)
+	glow.Size = UDim2.new(0, 420, 0, 420)
 	glow.BackgroundColor3 = PALETTE.Portal
 	glow.BackgroundTransparency = 0.88
 	glow.BorderSizePixel = 0
@@ -222,34 +222,34 @@ function CharacterCreationUI:Mount(playerGui)
 	local header = Instance.new("Frame")
 	header.Name = "Header"
 	header.BackgroundTransparency = 1
-	header.Size = UDim2.new(1, 0, 0, 110)
-	header.Position = UDim2.new(0, 0, 0, 28)
+	header.Size = UDim2.new(1, 0, 0, 80)
+	header.Position = UDim2.new(0, 0, 0, 16)
 	header.Parent = root
 
 	newLabel({
 		Parent = header,
 		Text = "A R C A D I A   O N L I N E",
 		Font = FONT_TITLE,
-		TextSize = 34,
+		TextSize = 24,
 		TextColor3 = PALETTE.Gold,
-		Size = UDim2.new(1, 0, 0, 44),
+		Size = UDim2.new(1, 0, 0, 32),
 	})
 
 	self._stepLabel = newLabel({
 		Parent = header,
 		Text = "Step 1 — The Portal Reveals Your Origin",
 		Font = FONT_BODY,
-		TextSize = 16,
+		TextSize = 13,
 		TextColor3 = PALETTE.TextMuted,
-		Size = UDim2.new(1, 0, 0, 26),
-		Position = UDim2.new(0, 0, 0, 48),
+		Size = UDim2.new(1, 0, 0, 20),
+		Position = UDim2.new(0, 0, 0, 36),
 	})
 
 	-- Step dots
 	local dotsHolder = Instance.new("Frame")
 	dotsHolder.BackgroundTransparency = 1
 	dotsHolder.Size = UDim2.new(0, 60, 0, 10)
-	dotsHolder.Position = UDim2.new(0.5, 0, 0, 84)
+	dotsHolder.Position = UDim2.new(0.5, 0, 0, 62)
 	dotsHolder.AnchorPoint = Vector2.new(0.5, 0)
 	dotsHolder.Parent = header
 	local dotsLayout = Instance.new("UIListLayout")
@@ -277,7 +277,7 @@ function CharacterCreationUI:Mount(playerGui)
 	pages.Name = "Pages"
 	pages.BackgroundTransparency = 1
 	pages.Size = UDim2.new(1, 0, 1, -170)
-	pages.Position = UDim2.new(0, 0, 0, 160)
+	pages.Position = UDim2.new(0, 0, 0, 110)
 	pages.Parent = root
 	self._pages = pages
 
@@ -303,34 +303,34 @@ function CharacterCreationUI:_buildRacePage(parent)
 	card.Name = "RevealCard"
 	card.AnchorPoint = Vector2.new(0.5, 0)
 	card.Position = UDim2.new(0.5, 0, 0, 0)
-	card.Size = UDim2.new(0, 420, 0, 470)
+	card.Size = UDim2.new(0, 340, 0, 380)
 	card.BackgroundColor3 = PALETTE.Panel
 	card.Parent = page
-	corner(card, 20)
+	corner(card, 16)
 	local cardStroke = stroke(card, PALETTE.Common, 1.5, 0.35)
 	self._raceCardStroke = cardStroke
-	pad(card, 28, 24)
+	pad(card, 20, 16)
 
 	local layout = Instance.new("UIListLayout")
 	layout.FillDirection = Enum.FillDirection.Vertical
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 12)
+	layout.Padding = UDim.new(0, 8)
 	layout.Parent = card
 
 	self._rarityTag = newLabel({
 		Parent = card,
 		Text = "COMMON",
 		Font = FONT_HEADING,
-		TextSize = 13,
+		TextSize = 11,
 		TextColor3 = PALETTE.Common,
-		Size = UDim2.new(1, 0, 0, 18),
+		Size = UDim2.new(1, 0, 0, 12),
 		LayoutOrder = 1,
 	})
 
 	local orbHolder = Instance.new("Frame")
 	orbHolder.BackgroundTransparency = 1
-	orbHolder.Size = UDim2.new(0, 120, 0, 120)
+	orbHolder.Size = UDim2.new(0, 90, 0, 90)
 	orbHolder.LayoutOrder = 2
 	orbHolder.Parent = card
 
@@ -340,8 +340,8 @@ function CharacterCreationUI:_buildRacePage(parent)
 	self._orb.Size = UDim2.new(1, 0, 1, 0)
 	self._orb.BackgroundColor3 = RACE_ORB_COLOR.Human
 	self._orb.Parent = orbHolder
-	corner(self._orb, 60)
-	self._orbStroke = stroke(self._orb, PALETTE.Gold, 3, 0.2)
+	corner(self._orb, 45)
+	self._orbStroke = stroke(self._orb, PALETTE.Gold, 2, 0.2)
 	local orbGradient = Instance.new("UIGradient")
 	orbGradient.Rotation = 90
 	orbGradient.Parent = self._orb
@@ -350,7 +350,7 @@ function CharacterCreationUI:_buildRacePage(parent)
 		Parent = self._orb,
 		Text = "H",
 		Font = FONT_TITLE,
-		TextSize = 44,
+		TextSize = 34,
 		TextColor3 = Color3.fromRGB(20, 18, 16),
 		Size = UDim2.new(1, 0, 1, 0),
 	})
@@ -359,9 +359,9 @@ function CharacterCreationUI:_buildRacePage(parent)
 		Parent = card,
 		Text = "—",
 		Font = FONT_TITLE,
-		TextSize = 26,
+		TextSize = 20,
 		TextColor3 = PALETTE.TextPrimary,
-		Size = UDim2.new(1, 0, 0, 34),
+		Size = UDim2.new(1, 0, 0, 28),
 		LayoutOrder = 3,
 	})
 
@@ -371,14 +371,14 @@ function CharacterCreationUI:_buildRacePage(parent)
 		Font = FONT_BODY,
 		TextSize = 13,
 		TextColor3 = PALETTE.TextMuted,
-		Size = UDim2.new(1, 0, 0, 18),
+		Size = UDim2.new(1, 0, 0, 14),
 		LayoutOrder = 4,
 	})
 
 	-- Stat row
 	local statRow = Instance.new("Frame")
 	statRow.BackgroundTransparency = 1
-	statRow.Size = UDim2.new(1, 0, 0, 64)
+	statRow.Size = UDim2.new(1, 0, 0, 52)
 	statRow.LayoutOrder = 5
 	statRow.Parent = card
 	local statLayout = Instance.new("UIListLayout")
@@ -390,7 +390,7 @@ function CharacterCreationUI:_buildRacePage(parent)
 	self._statPills = {}
 	for _, statId in ipairs(STAT_ORDER) do
 		local pill = Instance.new("Frame")
-		pill.Size = UDim2.new(0, 62, 0, 64)
+		pill.Size = UDim2.new(0, 52, 0, 52)
 		pill.BackgroundColor3 = PALETTE.PanelLight
 		pill.Parent = statRow
 		corner(pill, 10)
@@ -399,7 +399,7 @@ function CharacterCreationUI:_buildRacePage(parent)
 			Parent = pill,
 			Text = statId,
 			Font = FONT_BODY,
-			TextSize = 12,
+			TextSize = 10,
 			TextColor3 = PALETTE.TextMuted,
 			Size = UDim2.new(1, 0, 0, 20),
 			Position = UDim2.new(0, 0, 0, 8),
@@ -409,10 +409,10 @@ function CharacterCreationUI:_buildRacePage(parent)
 			Parent = pill,
 			Text = "+0",
 			Font = FONT_HEADING,
-			TextSize = 16,
+			TextSize = 14,
 			TextColor3 = PALETTE.Neutral,
-			Size = UDim2.new(1, 0, 0, 24),
-			Position = UDim2.new(0, 0, 0, 28),
+			Size = UDim2.new(1, 0, 0, 20),
+			Position = UDim2.new(0, 0, 0, 22),
 		})
 		self._statPills[statId] = valueLabel
 	end
@@ -423,7 +423,7 @@ function CharacterCreationUI:_buildRacePage(parent)
 		Font = FONT_BODY,
 		TextSize = 13,
 		TextColor3 = PALETTE.Danger,
-		Size = UDim2.new(1, 0, 0, 18),
+		Size = UDim2.new(1, 0, 0, 14),
 		LayoutOrder = 6,
 		TextWrapped = true,
 	})
@@ -431,7 +431,7 @@ function CharacterCreationUI:_buildRacePage(parent)
 	-- Tombol
 	local buttonRow = Instance.new("Frame")
 	buttonRow.BackgroundTransparency = 1
-	buttonRow.Size = UDim2.new(1, 0, 0, 48)
+	buttonRow.Size = UDim2.new(1, 0, 0, 38)
 	buttonRow.LayoutOrder = 7
 	buttonRow.Parent = card
 	local btnLayout = Instance.new("UIListLayout")
@@ -443,10 +443,10 @@ function CharacterCreationUI:_buildRacePage(parent)
 	self._rerollButton = newButton({
 		Parent = buttonRow,
 		Text = "🎲  Reroll",
-		Size = UDim2.new(0, 150, 0, 48),
+		Size = UDim2.new(0, 120, 0, 38),
 		BackgroundColor3 = PALETTE.PanelLight,
 		TextColor3 = PALETTE.TextPrimary,
-		TextSize = 15,
+		TextSize = 13,
 	})
 	stroke(self._rerollButton, PALETTE.Common, 1, 0.4)
 	wireButtonFeedback(self._rerollButton, PALETTE.PanelLight, Color3.fromRGB(40, 44, 68))
@@ -457,10 +457,10 @@ function CharacterCreationUI:_buildRacePage(parent)
 	self._confirmRaceButton = newButton({
 		Parent = buttonRow,
 		Text = "Confirm Race  ✓",
-		Size = UDim2.new(0, 190, 0, 48),
+		Size = UDim2.new(0, 150, 0, 38),
 		BackgroundColor3 = PALETTE.Gold,
 		TextColor3 = Color3.fromRGB(30, 22, 8),
-		TextSize = 15,
+		TextSize = 13,
 	})
 	wireButtonFeedback(self._confirmRaceButton, PALETTE.Gold, Color3.fromRGB(250, 205, 120))
 	self._confirmRaceButton.MouseButton1Click:Connect(function()
@@ -484,9 +484,9 @@ function CharacterCreationUI:_buildClassPage(parent)
 		Parent = page,
 		Text = "Choose the path your Hero will walk",
 		Font = FONT_BODY,
-		TextSize = 15,
+		TextSize = 12,
 		TextColor3 = PALETTE.TextMuted,
-		Size = UDim2.new(1, 0, 0, 22),
+		Size = UDim2.new(1, 0, 0, 18),
 	})
 	subtitle.Position = UDim2.new(0, 0, 0, 0)
 
@@ -494,13 +494,13 @@ function CharacterCreationUI:_buildClassPage(parent)
 	grid.Name = "ClassGrid"
 	grid.AnchorPoint = Vector2.new(0.5, 0)
 	grid.Position = UDim2.new(0.5, 0, 0, 34)
-	grid.Size = UDim2.new(0, 700, 0, 300)
+	grid.Size = UDim2.new(0, 560, 0, 240)
 	grid.BackgroundTransparency = 1
 	grid.Parent = page
 
 	local gridLayout = Instance.new("UIGridLayout")
-	gridLayout.CellSize = UDim2.new(0, 224, 0, 140)
-	gridLayout.CellPadding = UDim2.new(0, 14, 0, 14)
+	gridLayout.CellSize = UDim2.new(0, 172, 0, 110)
+	gridLayout.CellPadding = UDim2.new(0, 10, 0, 10)
 	gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	gridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	gridLayout.Parent = grid
@@ -522,23 +522,23 @@ function CharacterCreationUI:_buildClassPage(parent)
 		Parent = page,
 		Text = "",
 		Font = FONT_BODY,
-		TextSize = 13,
+		TextSize = 11,
 		TextColor3 = PALETTE.Danger,
-		Size = UDim2.new(1, 0, 0, 18),
-		Position = UDim2.new(0, 0, 0, 344),
+		Size = UDim2.new(1, 0, 0, 14),
+		Position = UDim2.new(0, 0, 0, 264),
 	})
 
 	self._beginButton = newButton({
 		Parent = page,
 		Text = "Begin Journey  ✦",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 372),
-		Size = UDim2.new(0, 260, 0, 52),
+		Position = UDim2.new(0.5, 0, 0, 290),
+		Size = UDim2.new(0, 200, 0, 42),
 		BackgroundColor3 = PALETTE.Gold,
 		TextColor3 = Color3.fromRGB(30, 22, 8),
-		TextSize = 16,
+		TextSize = 14,
 	})
-	self._beginButton.Position = UDim2.new(0.5, 0, 0, 372)
+	self._beginButton.Position = UDim2.new(0.5, 0, 0, 290)
 	self._beginButton.AnchorPoint = Vector2.new(0.5, 0)
 	self:_setBeginEnabled(false)
 	self._beginButton.MouseButton1Click:Connect(function()
@@ -552,9 +552,9 @@ function CharacterCreationUI:_createClassCard(parent, classId, data, order)
 	local card = newButton({
 		Parent = parent,
 		Text = "",
-		Size = UDim2.new(0, 224, 0, 140),
+		Size = UDim2.new(0, 172, 0, 110),
 		BackgroundColor3 = PALETTE.Panel,
-		Radius = 14,
+		Radius = 10,
 	})
 	card.LayoutOrder = order
 	local cardStroke = stroke(card, PALETTE.Common, 1.25, 0.45)
@@ -570,30 +570,30 @@ function CharacterCreationUI:_createClassCard(parent, classId, data, order)
 		Parent = card,
 		Text = icon .. "  " .. data.displayName,
 		Font = FONT_HEADING,
-		TextSize = 18,
+		TextSize = 14,
 		TextColor3 = PALETTE.TextPrimary,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Size = UDim2.new(1, 0, 0, 24),
+		Size = UDim2.new(1, 0, 0, 20),
 	})
 
 	newLabel({
 		Parent = card,
 		Text = ROLE_LABEL[data.role] or data.role,
 		Font = FONT_BODY,
-		TextSize = 13,
+		TextSize = 11,
 		TextColor3 = PALETTE.Gold,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Size = UDim2.new(1, 0, 0, 18),
+		Size = UDim2.new(1, 0, 0, 14),
 	})
 
 	newLabel({
 		Parent = card,
 		Text = "Weapon: " .. table.concat(data.weaponTypes, " / "),
 		Font = FONT_BODY,
-		TextSize = 12,
+		TextSize = 10,
 		TextColor3 = PALETTE.TextMuted,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Size = UDim2.new(1, 0, 0, 30),
+		Size = UDim2.new(1, 0, 0, 22),
 		TextWrapped = true,
 	})
 
@@ -604,7 +604,7 @@ function CharacterCreationUI:_createClassCard(parent, classId, data, order)
 		TextSize = 11,
 		TextColor3 = PALETTE.Neutral,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Size = UDim2.new(1, 0, 0, 16),
+		Size = UDim2.new(1, 0, 0, 12),
 	})
 
 	wireButtonFeedback(card, PALETTE.Panel, PALETTE.PanelLight)
