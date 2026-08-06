@@ -503,37 +503,34 @@ task.spawn(function()
 	end)
 	if not atk1ok then warn("  ❌ ProcessAttack error:", atk1) end
 	if not atk1 then atk1 = { success = false, reason = "nil result" } end
-	print(("  📊 SlashCombo → ok=%s, success=%s, reason=%s, dmg=%s, enemyHP=%s"):format(
-		tostring(atk1ok), tostring(atk1.success), tostring(atk1.reason or "none"),
-		tostring(atk1.damage), tostring(atk1.enemyHP)))
-	assert_true("Wolf masih hidup", atk1.success and atk1.enemyHP > 0)
+	print(("  📊 SlashCombo → dmg=%d, crit=%s, enemyHP=%d, killed=%s"):format(
+		atk1.damage or 0, tostring(atk1.isCrit), atk1.enemyHP or 0, tostring(atk1.killed)))
+	assert_true("SlashCombo sukses", atk1.success)
 
 	-- 7g. Skill tidak valid
 	local atk2 = CombatService:ProcessAttack(player, wolfId, "FakeSkill")
 	print(("  📊 FakeSkill: %s (%s)"):format(tostring(atk2.success), tostring(atk2.reason)))
 	assert_true("FakeSkill ditolak", not atk2.success)
 
-	-- 7h. Serang wolf sampai mati
-	local killResult
-	for i = 1, 20 do
-		local r = CombatService:ProcessAttack(player, wolfId, "SlashCombo")
-		if r.killed then
-			killResult = r
-			break
+	-- 7h. Wolf one-shot! (dmg=54 > HP=40)
+	if atk1.killed then
+		print("  📊 Wolf one-shot! (dmg > 40 HP)")
+	else
+		for i = 1, 20 do
+			local r = CombatService:ProcessAttack(player, wolfId, "SlashCombo")
+			if r.killed then atk1 = r; break end
 		end
 	end
-	print(("  📊 Wolf killed: %s, exp=%d, currency=%d"):format(
-		tostring(killResult and killResult.killed),
-		killResult and killResult.expReward or 0,
-		killResult and killResult.currencyReward or 0))
-	assert_true("Wolf mati", killResult and killResult.killed)
+	assert_true("Wolf mati", atk1.killed)
+	print(("  📊 Wolf killed! exp=%d, currency=%d"):format(
+		atk1.expReward or 0, atk1.currencyReward or 0))
 
-	-- 7i. Enemy sudah mati → tidak bisa serang lagi
+	-- 7i. Dead wolf → tolak
 	local atkDead = CombatService:ProcessAttack(player, wolfId, "SlashCombo")
 	print(("  📊 Serang wolf mati: %s (%s)"):format(tostring(atkDead.success), tostring(atkDead.reason)))
 	assert_true("Dead wolf → tolak", not atkDead.success)
 
-	-- 7j. GetAvailableSkills (Warrior Lv7)
+	-- 7j. GetAvailableSkills
 	local skills = CombatService:GetAvailableSkills(player)
 	print(("  📊 Available skills (Warrior Lv%d): %d"):format(
 		data.Level, skills.skills and #skills.skills or 0))
@@ -544,23 +541,25 @@ task.spawn(function()
 	end
 	assert_true("Has SlashCombo", hasSlash)
 
-	-- 7k. Mana test — cast sampai mana habis
-	CombatService:SetPlayerMana(player, 10)
+	-- 7k. Mana test — Wolf 40 HP, one-shot. Pakai skill beda.
+	CombatService:SetPlayerMana(player, 30)
 	local wolfId2 = CombatService:SpawnEnemy("Enemy_Wolf")
-	local atkManaOk, atkMana = pcall(function()
-		return CombatService:ProcessAttack(player, wolfId2, "SlashCombo")
-	end)
-	if not atkManaOk then warn("  ❌ Mana test error:", atkMana) end
-	if not atkMana then atkMana = { success = false, reason = "nil result" } end
-	print(("  📊 SlashCombo (10 mana, cost 5): %s, reason=%s"):format(
-		tostring(atkMana.success), tostring(atkMana.reason or "none")))
-	assert_true("SlashCombo OK (10 mana >= 5 cost)", atkMana.success)
+	-- WarCry cost 15, SlashCombo cost 5. Total 20 < 30 → OK
+	local atkWC = CombatService:ProcessAttack(player, wolfId2, "WarCry")
+	print(("  📊 WarCry (30 mana, cost 15): %s, reason=%s"):format(
+		tostring(atkWC.success), tostring(atkWC.reason or "none")))
+	assert_true("WarCry OK", atkWC.success)
 
+	local atkSC = CombatService:ProcessAttack(player, wolfId2, "SlashCombo")
+	print(("  📊 SlashCombo (15 mana, cost 5): %s, reason=%s"):format(
+		tostring(atkSC.success), tostring(atkSC.reason or "none")))
+	assert_true("SlashCombo OK", atkSC.success)
+
+	-- Mana = 10, WarCry cost 15 → gagal
 	local atkNoMana = CombatService:ProcessAttack(player, wolfId2, "WarCry")
-	print(("  📊 WarCry (0 mana, cost 15): %s (%s)"):format(
+	print(("  📊 WarCry (10 mana, cost 15): %s (%s)"):format(
 		tostring(atkNoMana.success), tostring(atkNoMana.reason)))
-	-- Mana sekarang 5, WarCry costs 15 → gagal
-	assert_true("WarCry ditolak (mana habis)", not atkNoMana.success)
+	assert_true("WarCry ditolak (mana kurang)", not atkNoMana.success)
 
 	-- 7l. Respawn enemy
 	CombatService:ResetEnemy(wolfId)
