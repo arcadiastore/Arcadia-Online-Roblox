@@ -17,6 +17,14 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] Dungeon UI — DungeonController + lobby + status + rewards
+### Ditambahkan
+- `DungeonController.lua` (StarterPlayerScripts/Controllers): client-side dungeon
+  lobby (L-key toggle, 3 dungeon cards, enter button), status panel (wave/enemies/timer),
+  rewards popup (EXP/gold/items). Poll status setiap 2 detik saat di dungeon.
+
+---
+
 ## [2026-08-06] DungeonService — tested ✅
 ### Ditambahkan
 - `DungeonService/init.lua` (ServerScriptService/Services): server-authoritative
