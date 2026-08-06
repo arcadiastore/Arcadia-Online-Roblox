@@ -1,24 +1,5 @@
 --[[
-	CharacterCreationController.lua
-	Menghubungkan UI CharacterCreation (StarterGui/UI/CharacterCreation) ke
-	Remote Character/* (docs/02_TDD.md §4). Satu Controller = satu domain UI
-	(docs/04_AI_AGENT_RULES.md) — tidak ada keputusan gameplay di sini, semua
-	RNG/validasi ras & kelas tetap di CharacterService server-side.
-
-	Alur:
-	  1. Start() → panggil CreationStatus. Kalau hasClass sudah true, tidak
-	     perlu tampilkan apa-apa (karakter sudah selesai dibuat).
-	  2. Kalau hasRace true tapi hasClass false → langsung buka Step 2 (Class),
-	     race sudah dikonfirmasi sebelumnya jadi tidak perlu reveal ulang.
-	  3. Kalau belum ada race sama sekali → mount UI, panggil RerollRace utk
-	     roll pertama, tampilkan.
-	  4. Reroll → panggil ulang RerollRace, update tampilan.
-	  5. Confirm Race → panggil ConfirmRace(raceId yang lagi ditampilkan).
-	     Sukses → pindah ke Step 2. Gagal → tampilkan reason dari server.
-	  6. Select Class (klik card) → hanya update seleksi visual (belum kirim
-	     remote, biar player bisa ganti-ganti pilihan dulu).
-	  7. Begin Journey → panggil SelectClass(classId terpilih). Sukses → outro
-	     & destroy UI. Gagal → tampilkan reason dari server.
+	CharacterCreationController.lua (v2 — with debug prints)
 ]]
 
 local Players = game:GetService("Players")
@@ -40,27 +21,47 @@ function CharacterCreationController:Init()
 		SelectClass = remotesFolder:WaitForChild("SelectClass"),
 		CreationStatus = remotesFolder:WaitForChild("CreationStatus"),
 	}
+	print("[CCC] Init — remotes siap")
 
 	local CharacterCreationUI = require(StarterGui:WaitForChild("UI"):WaitForChild("CharacterCreation"))
 	self._ui = CharacterCreationUI.new()
+	print("[CCC] Init — UI module loaded")
 end
 
 function CharacterCreationController:Start()
 	BaseController.Start(self)
 
-	local status = self._remotes.CreationStatus:InvokeServer()
+	print("[CCC] Start — cek CreationStatus...")
+	local ok, result = pcall(function()
+		return self._remotes.CreationStatus:InvokeServer()
+	end)
+
+	local status = ok and result or nil
+	print("[CCC] CreationStatus:", ok, status and ("hasRace=" .. tostring(status.hasRace) .. " hasClass=" .. tostring(status.hasClass)) or "nil/error")
+
 	if status and status.hasClass then
-		-- Karakter sudah lengkap (race + class) — tidak perlu tampilkan UI.
+		print("[CCC] Karakter sudah lengkap — skip UI")
 		return
 	end
 
 	local player = Players.LocalPlayer
 	local playerGui = player:WaitForChild("PlayerGui")
-	self._ui:Mount(playerGui)
+
+	print("[CCC] Mounting UI...")
+	local mountOk, mountErr = pcall(function()
+		self._ui:Mount(playerGui)
+	end)
+	if not mountOk then
+		warn("[CCC] Mount GAGAL:", mountErr)
+		return
+	end
+	print("[CCC] UI mounted —", self._gui and "OK" or "no _gui ref")
 
 	if status and status.hasRace then
+		print("[CCC] Sudah punya race, skip ke class step")
 		self._ui:SkipToClassStep()
 	else
+		print("[CCC] Requesting reroll...")
 		self:_requestReroll()
 	end
 
@@ -75,45 +76,66 @@ function CharacterCreationController:Start()
 	self._ui.BeginJourneyRequested.Event:Connect(function(classId)
 		self:_selectClass(classId)
 	end)
+	print("[CCC] Start selesai — event connected")
 end
 
 function CharacterCreationController:_requestReroll()
+	print("[CCC] RerollRace: InvokeServer...")
 	self._ui:SetRaceLoading(true)
-	local result = self._remotes.RerollRace:InvokeServer()
+	local ok, result = pcall(function()
+		return self._remotes.RerollRace:InvokeServer()
+	end)
 	self._ui:SetRaceLoading(false)
 
-	if not result or not result.success then
-		self._ui:ShowRaceError((result and result.reason) or "Gagal roll ras, coba lagi.")
+	print("[CCC] RerollRace:", ok, result and result.success, result and result.raceId)
+
+	if not ok or not result or not result.success then
+		local reason = (result and result.reason) or (not ok and "remote error") or "unknown"
+		warn("[CCC] RerollRace gagal:", reason)
+		self._ui:ShowRaceError("Gagal roll ras: " .. reason)
 		return
 	end
 
 	self._ui:ShowRaceReveal(result)
+	print("[CCC] ShowRaceReveal:", result.raceId)
 end
 
 function CharacterCreationController:_confirmRace(raceId)
+	print("[CCC] ConfirmRace:", raceId)
 	self._ui:SetRaceLoading(true)
-	local result = self._remotes.ConfirmRace:InvokeServer(raceId)
+	local ok, result = pcall(function()
+		return self._remotes.ConfirmRace:InvokeServer(raceId)
+	end)
 	self._ui:SetRaceLoading(false)
 
-	if not result or not result.success then
-		self._ui:ShowRaceError((result and result.reason) or "Gagal konfirmasi ras.")
+	if not ok or not result or not result.success then
+		local reason = (result and result.reason) or (not ok and "remote error") or "unknown"
+		warn("[CCC] ConfirmRace gagal:", reason)
+		self._ui:ShowRaceError("Gagal konfirmasi: " .. reason)
 		return
 	end
 
 	self._ui:GoToClassStep()
+	print("[CCC] ConfirmRace sukses → class step")
 end
 
 function CharacterCreationController:_selectClass(classId)
+	print("[CCC] SelectClass:", classId)
 	self._ui:SetClassLoading(true)
-	local result = self._remotes.SelectClass:InvokeServer(classId)
+	local ok, result = pcall(function()
+		return self._remotes.SelectClass:InvokeServer(classId)
+	end)
 	self._ui:SetClassLoading(false)
 
-	if not result or not result.success then
-		self._ui:ShowClassError((result and result.reason) or "Gagal pilih kelas.")
+	if not ok or not result or not result.success then
+		local reason = (result and result.reason) or (not ok and "remote error") or "unknown"
+		warn("[CCC] SelectClass gagal:", reason)
+		self._ui:ShowClassError("Gagal pilih kelas: " .. reason)
 		return
 	end
 
 	self._ui:PlayOutro()
+	print("[CCC] SelectClass sukses → outro")
 end
 
 return CharacterCreationController
