@@ -17,6 +17,18 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] Skema aset visual (meshId/textureId/iconId) di Items.lua
+### Ditambahkan
+- Konvensi field aset visual untuk item: `meshId` (model 3D MeshPart),
+  `textureId` (texture terpisah, opsional), `iconId` (ikon 2D UI) — format
+  `rbxassetid://...`, placeholder wajib `"rbxassetid://0"` sampai aset
+  final diupload. Didokumentasikan di `docs/03_DDD.md` §3/§3.1 dan header
+  `Configs/Items.lua`.
+### Catatan Teknis / Risiko
+- Murni penyiapan skema/dokumentasi — `Items.lua` tetap skeleton kosong,
+  belum ada item aktual yang didesain. Tidak ada logic Service baru, tidak
+  ada permukaan exploit baru.
+
 ## [2026-08-06] Tambah jalur Kelas Assassin & profesi non-combat Craftsman
 ### Ditambahkan
 - Jalur Kelas combat ke-6: **Assassin → Shadowblade → Nightstalker**

@@ -84,8 +84,22 @@ Fire = { strongAgainst = { "Nature", "Ice" }, weakAgainst = { "Water" } },
   stats = { STR = 4 },
   element = nil,
   tradable = true,
+
+  -- Aset visual 3D/2D — lihat §3.1 di bawah untuk konvensi lengkap.
+  meshId = "rbxassetid://0",     -- placeholder sampai model final diupload
+  textureId = "rbxassetid://0",  -- placeholder, nil kalau mesh belum bertekstur sendiri
+  iconId = "rbxassetid://0",     -- ikon 2D untuk UI inventory/hotbar
 }
 ```
+
+### 3.1 Konvensi Aset Visual (meshId / textureId / iconId)
+Berlaku untuk semua entry `Items.lua` yang punya wujud fisik (Weapon, Armor, dsb — item abstrak seperti currency/quest item boleh skip field ini) dan (nanti) `Enemies.lua`.
+
+- **`meshId`** — id aset MeshPart Roblox (`rbxassetid://...`) hasil upload manual dari Studio atau tool AI generator (lihat §8.4 GDD & percakapan desain untuk daftar tool: Roblox Studio Cube, Meshy, Sloyd, dsb.). Untuk item non-equipment yang tidak butuh model 3D unik (mis. bahan crafting generik), boleh `nil` dan pakai part/ikon generik dari `Shared`.
+- **`textureId`** — id aset texture terpisah, dipakai kalau mesh diexport tanpa material ter-bake. Kalau mesh sudah datang dengan PBR material dari generator, boleh `nil`.
+- **`iconId`** — wajib diisi untuk semua item yang muncul di UI (inventory, hotbar, shop) — beda dari `meshId` karena ini gambar 2D datar (thumbnail), bukan model 3D.
+- **Placeholder wajib `"rbxassetid://0"`, bukan string kosong `""` atau `nil` diam-diam**, supaya jelas dibedakan "belum diisi" vs "sengaja tanpa model". Ganti ke id asli begitu aset final diupload ke Roblox — cukup edit di `Items.lua`, tidak menyentuh Service manapun (konsisten dengan §1 Single Source of Truth).
+- Proses upload aset (dari hasil AI generator eksternal seperti Meshy/Sloyd, atau bikinan artist) tetap manual lewat Roblox Studio/Creator Hub — **bukan** sesuatu yang dilakukan otomatis oleh Service saat runtime.
 
 ### Material item entry (bahan crafting — tetap di `Items.lua`, type = "Material")
 ```lua

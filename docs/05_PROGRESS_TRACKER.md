@@ -55,6 +55,26 @@ _(Tambahkan baris baru bila ada sistem baru yang mulai dikerjakan — jangan hap
 ## 2. Session Log
 _(Entri terbaru di paling atas. Format lihat `04_AI_AGENT_RULES.md` §3.)_
 
+### [2026-08-06] Skema aset visual (meshId/textureId/iconId) di Items.lua
+- Dikerjakan: menambah konvensi field aset visual 3D/2D untuk item
+  (`meshId`, `textureId`, `iconId`, format `rbxassetid://...`, placeholder
+  wajib `"rbxassetid://0"`) di `docs/03_DDD.md` §3 (contoh entry + §3.1
+  penjelasan konvensi) dan header dokumentasi `Configs/Items.lua`. Tidak
+  menambah item aktual (`Items.lua` masih skeleton kosong, belum ada
+  desain item final) — murni menyiapkan tempat field-nya agar tidak perlu
+  ubah struktur data lagi begitu aset 3D (dari Roblox Studio Cube/Meshy/
+  Sloyd/artist — dibahas terpisah dengan pemilik project) sudah tersedia.
+- File yang disentuh: `docs/03_DDD.md`, `src/ReplicatedStorage/Configs/Items.lua`
+- Status sistem yang berubah: tidak ada baris status yang berubah (item
+  masih ⬜, ini murni persiapan skema, belum "desain item final")
+- Diketahui belum selesai / next step: item aktual (weapon/armor/material)
+  belum didesain sama sekali di `01_GDD.md` — perlu sesi desain terpisah
+  sebelum `Items.lua` diisi. Field visual sama (`meshId` dkk.) kemungkinan
+  perlu direplikasi ke `Enemies.lua` nanti untuk model musuh — belum
+  dikerjakan, tunggu diminta eksplisit.
+- Catatan risiko/exploit yang perlu direview manusia: tidak ada (murni
+  dokumentasi skema, belum ada data/logic baru).
+
 ### [2026-08-06] Tambah jalur Kelas Assassin & profesi non-combat Craftsman
 - Dikerjakan: menambah **Assassin** sebagai jalur ke-6 Kelas combat
   (Melee Physical DPS varian stealth/crit, Dagger/Dual Blade, chain
