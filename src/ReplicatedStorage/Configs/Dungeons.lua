@@ -32,10 +32,8 @@ return {
 		zone = "DuskwoodForest",
 		enemyElement = "Dark",
 		requirements = {
-			requiredLevel = 25,
-			requiredPartySize = 2,
-			requiredItemId = nil, -- "GateKey_Duskwood" saat key system jalan
-			requiredQuestId = nil,
+			requiredLevel = 10,
+			requiredPartySize = 1,
 		},
 		waves = {
 			{ enemies = { { enemyId = "Enemy_ShadowWraith", count = 3 } } },
@@ -62,8 +60,8 @@ return {
 		zone = "FrostpeakMountains",
 		enemyElement = "Water",
 		requirements = {
-			requiredLevel = 30,
-			requiredPartySize = 2,
+			requiredLevel = 15,
+			requiredPartySize = 1,
 		},
 		waves = {
 			{ enemies = { { enemyId = "Enemy_IceElemental", count = 3 } } },
@@ -90,7 +88,7 @@ return {
 		zone = "DuskwoodForest",
 		enemyElement = "Dark",
 		requirements = {
-			requiredLevel = 15,
+			requiredLevel = 5,
 			requiredPartySize = 1, -- solo-friendly
 		},
 		waves = {
