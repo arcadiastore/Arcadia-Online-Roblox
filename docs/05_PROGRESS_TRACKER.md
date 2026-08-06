@@ -33,7 +33,7 @@
 | Desain Zona & Gate final (Millhaven → Shattered Sanctum) | ✅ | Lihat `01_GDD.md` §6, data gate di `Configs/Gates.lua` |
 | Gate/Portal system — implementasi | ✅ | `GateService.lua` (server): validasi syarat Level/Quest/Item, unlock gate, simpan ke `UnlockedGates`. Remote `Gate/RequestOpen` (rate-limited 1s). Tested: fake gate ditolak, LevelAndQuest (level OK + quest), idempotent unlock, Frostpeak ditolak (no quest). 3D portal builder + GateUI confirm + GateController. |
 | Zona 1 (Millhaven) — build/implementasi | ⬜ | |
-| Dungeon instance pertama (The Sunken Crypt) | ⬜ | |
+| Dungeon instance pertama (The Sunken Crypt) | ✅ | `DungeonService.lua`: EnterDungeon, GetStatus, ReportEnemyKilled, ForceLeave. 3 dungeon (CorruptedGrove Lv15, SunkenCrypt Lv25, FrostpeakCavern Lv30). Wave+boss+rewards. Tested 145/145. |
 | Quest system (main quest) | ✅ | `QuestService.lua`: AcceptQuest, ReportProgress (server-side only), CompleteQuest, GetAvailableQuests. 20 quest definitions (Main, Gate unlock, JobChange Tier 2/3, Daily repeatable). Remote `Quest/Accept`, `Quest/Complete`, `Quest/GetLog`. Tested: prereq level+quest, progress tracking, complete + rewards, daily repeatable (86/86). |
 
 ### Sosial & Ekonomi

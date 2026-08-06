@@ -17,6 +17,18 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] DungeonService — tested ✅
+### Ditambahkan
+- `DungeonService/init.lua` (ServerScriptService/Services): server-authoritative
+  dungeon system. API: `EnterDungeon`, `GetStatus`, `ReportEnemyKilled`, `ForceLeave`.
+  3 dungeon (CorruptedGrove Lv15, SunkenCrypt Lv25, FrostpeakCavern Lv30).
+  Wave system, boss fight, rewards (EXP + currency + items with drop rate).
+  `Dungeons.lua` config, 3 boss enemies in `Enemies.lua`.
+  `DungeonId` field di ProfileTemplate.
+- Remote model: `Dungeon/Enter`, `Dungeon/GetStatus`.
+
+---
+
 ## [2026-08-06] PartyService — tested ✅
 ### Ditambahkan
 - `PartyService/init.lua` (ServerScriptService/Services): server-authoritative
