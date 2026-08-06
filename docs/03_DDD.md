@@ -38,6 +38,7 @@ damage = damage * mult
 | `Configs/Quests.lua` | Definisi quest (syarat, reward, langkah) |
 | `Configs/Gates.lua` | Definisi gate/portal (syarat buka, zona tujuan) |
 | `Configs/LevelCurve.lua` | Rumus/tabel EXP per level |
+| `Configs/Professions.lua` | Daftar profesi non-combat (Craftsman) + rank + resep crafting |
 
 ## 3. Contoh Skema Entry
 
@@ -86,6 +87,43 @@ Fire = { strongAgainst = { "Nature", "Ice" }, weakAgainst = { "Water" } },
 }
 ```
 
+### Material item entry (bahan crafting — tetap di `Items.lua`, type = "Material")
+```lua
+{
+  id = "IronOre",
+  displayName = "Iron Ore",
+  type = "Material",
+  rarity = "Common",
+  tradable = true,
+}
+```
+
+### Profession entry (`Configs/Professions.lua`)
+```lua
+Craftsman = {
+  id = "Craftsman",
+  displayName = "Craftsman",
+  ranks = {
+    { id = "Apprentice", displayName = "Apprentice Craftsman", requiredExp = 0 },
+    { id = "Journeyman",  displayName = "Journeyman Craftsman", requiredExp = 500 },
+    { id = "Master",      displayName = "Master Craftsman",     requiredExp = 2000 },
+  },
+  recipeIds = { "Recipe_IronSword" }, -- placeholder, isi setelah resep didesain
+}
+```
+
+### Recipe entry (`Configs/Professions.lua`)
+```lua
+Recipe_IronSword = {
+  id = "Recipe_IronSword",
+  professionId = "Craftsman",
+  requiredRank = "Apprentice",
+  materials = { { itemId = "IronOre", quantity = 3 } },
+  resultItemId = "IronSword",
+  resultQuantity = 1,
+}
+```
+
 ## 4. Skema Data Pemain (Player Profile)
 ```lua
 {
@@ -94,6 +132,8 @@ Fire = { strongAgainst = { "Nature", "Ice" }, weakAgainst = { "Water" } },
   Exp = 0,
   RaceId = "Human",
   ClassId = "Warrior",
+  ProfessionId = nil,      -- nil = belum ambil profesi; kalau ada, mis. "Craftsman" (§8.4 GDD)
+  ProfessionExp = 0,       -- independen dari character Exp/Level
   Stats = { STR = 5, VIT = 5, INT = 5, AGI = 5, LUK = 5 },
   UnspentCombatPoints = 0,
   Currency = { Soft = 0, Premium = 0 },
@@ -107,6 +147,7 @@ Fire = { strongAgainst = { "Nature", "Ice" }, weakAgainst = { "Water" } },
 ```
 
 ## 5. Aturan Versi & Migrasi Data
+0. `ProfessionId`/`ProfessionExp` di §4 adalah field baru (ditambahkan bersama desain Craftsman) — begitu implementasi Profile system mulai berjalan, penambahan ini wajib lewat migrasi resmi (poin 1–3 di bawah), bukan langsung ditulis ke schema versi berjalan, karena saat ditulis dokumen ini belum ada satupun data pemain di production.
 1. Setiap perubahan struktur `Player Profile` **menaikkan** `SchemaVersion`.
 2. Migrasi ditulis sebagai fungsi tambahan (`Migrations/v1_to_v2.lua`, dst.), dipanggil berurutan saat load data lama — **jangan** menghapus/menimpa field lama secara diam-diam.
 3. Field baru harus punya default value yang aman jika field itu belum ada di data lama (jangan asumsikan semua data pemain sudah punya field terbaru).

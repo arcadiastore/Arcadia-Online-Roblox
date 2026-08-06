@@ -68,6 +68,7 @@ Stat inti per ras: **STR, VIT, INT, AGI, LUK**. Nilai adalah modifier tambahan d
 | Role | Tier 1 (mulai) | Tier 2 (job change) | Tier 3 (job change lanjutan) |
 |---|---|---|---|
 | Melee Physical DPS | **Warrior** | **Knight** | **Warlord** |
+| Melee Physical DPS (Stealth/Crit) | **Assassin** | **Shadowblade** | **Nightstalker** |
 | Tank | **Defender** | **Guardian** | **Sentinel** |
 | Magic DPS | **Mage** | **Elementalist** | **Archmage** |
 | Support/Healer | **Healer** | **Priest** | **High Priest** |
@@ -76,11 +77,22 @@ Stat inti per ras: **STR, VIT, INT, AGI, LUK**. Nilai adalah modifier tambahan d
 - Job change ke tier berikutnya butuh syarat **level minimum + quest job change** (syarat pasti diisi per kelas di `Configs/Classes.lua`, field `jobChange`).
 - Tier 2 & 3 tidak mengubah role dasar (mis. Warrior tetap jalur melee sampai Warlord) — variasi build datang dari kombinasi Ras + Elemen + gear, bukan dari branching kelas di MVP ini. Branching (satu Tier 1 punya beberapa pilihan Tier 2) bisa ditambah di fase pasca-MVP dan dicatat sebagai perubahan desain baru, bukan menimpa chain yang sudah ada.
 - Kelas menentukan tipe senjata yang dipakai dan role di party (tank/DPS/support), konsisten di semua tier dalam satu jalur.
+- **Assassin** adalah jalur ke-6, paralel dengan Warrior — sama-sama Melee Physical DPS, tapi diferensiasi lewat weapon type (**Dagger/Dual Blade**, vs Sword/Axe milik Warrior) dan identitas kit (crit chance/stealth-burst tinggi, VIT lebih rendah, bergantung pada AGI/LUK) — bukan branching dari Warrior, melainkan jalur Tier 1 independen sejak awal. Detail skill pasti diisi belakangan di `Configs/Skills.lua`.
 
 ### 8.3 Stat & Combat Points
 - Stat inti: **Strength (STR), Vitality (VIT), Intelligence (INT), Agility (AGI), Luck (LUK)** — final, dipakai konsisten di seluruh sistem (Ras, Kelas, Item, dsb).
 - **Combat Points**: poin yang didapat dari leveling/achievement untuk dialokasikan ke stat secara manual → mendukung build variety.
 - Achievement dapat memberi bonus stat permanen kecil (mendorong eksplorasi konten, bukan cuma grinding).
+
+### 8.4 Sistem Profesi: Craftsman (Final — MVP)
+Craftsman adalah **profesi non-combat** (lifeskill), terpisah total dari sistem Kelas/Job Tier di §8.2 — bukan role party, tidak punya weapon type, dan tidak masuk chain Tier 1→2→3 combat. Merealisasikan crafting yang sebelumnya disebut opsional di §14 Ekonomi.
+
+- **Bebas dikombinasikan** dengan Ras + Kelas apapun — tiap karakter boleh sekaligus jadi mis. Mage + Craftsman, tanpa saling mengunci pilihan (paralel dengan filosofi Ras × Kelas bebas di §8.1).
+- **Progression sendiri**, terpisah dari character level: **Craftsman EXP** didapat dari mengumpulkan bahan mentah (gathering di zona/dungeon) dan berhasil crafting, dinaikkan lewat 3 rank — **Apprentice Craftsman → Journeyman Craftsman → Master Craftsman** — tiap rank naik membuka tier resep lebih tinggi (bukan level minimum karakter, murni dari aktivitas crafting itu sendiri).
+- **Output**: crafting menghasilkan equipment & consumable dari resep + bahan mentah (bahan didefinisikan sebagai item baru bertipe `"Material"` di `Configs/Items.lua`, resep didefinisikan di `Configs/Professions.lua` — modul Config baru).
+- **Ekonomi**: hasil craft bisa dipakai sendiri atau (jika player trading diaktifkan, lihat §14) diperjualbelikan — mendukung pilar "Fair monetization" karena crafting adalah power lewat effort in-game, bukan Robux.
+- Tidak menggantikan Job Change di §8.2 — pemain tetap wajib pilih Kelas combat terpisah untuk bertarung; Craftsman murni menambah utility/ekonomi.
+- Skema data & contoh entry resep: lihat `03_DDD.md` §2–3 (`Configs/Professions.lua`) dan §4 (field `ProfessionId`/`ProfessionExp` di Player Profile).
 
 ## 9. Sistem Elemen (Final — MVP)
 6 elemen: **Fire, Water, Earth, Wind, Light, Dark**.
@@ -128,7 +140,7 @@ Light ⇄ Dark saling kuat & lemah satu sama lain (counter langsung, tidak seara
 ## 14. Ekonomi
 - Currency utama (soft currency, didapat in-game) dan currency premium (Robux-based, gamepass).
 - Shop NPC, kemungkinan player trading (jika ada, wajib anti-scam & anti-dupe — lihat TDD).
-- Crafting sistem opsional untuk fase lanjutan.
+- Crafting: lihat §8.4 (profesi **Craftsman**, final MVP) — hasil craft mengalir ke shop/trading di sini.
 
 ## 15. Sosial
 - Party system (2–5 pemain, share XP/loot dengan aturan jelas).
@@ -151,7 +163,7 @@ Light ⇄ Dark saling kuat & lemah satu sama lain (counter langsung, tidak seara
 ## 19. Roadmap Konten
 | Fase | Fokus |
 |---|---|
-| Fase 1 (MVP) | Zona Millhaven, 5 Ras, 5 Kelas Tier 1, Element Chart penuh, combat dasar |
+| Fase 1 (MVP) | Zona Millhaven, 5 Ras, 6 Kelas combat Tier 1 (termasuk Assassin) + profesi Craftsman, Element Chart penuh, combat dasar |
 | Fase 2 | Duskwood Forest, Frostpeak Mountains, job change Tier 2, party system |
 | Fase 3 | The Sunken Crypt (dungeon), job change Tier 3, quest cerita lanjutan, ekonomi/shop |
 | Fase 4 | The Shattered Sanctum (endgame), PvP, guild |

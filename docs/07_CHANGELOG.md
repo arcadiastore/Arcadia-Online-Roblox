@@ -17,6 +17,30 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] Tambah jalur Kelas Assassin & profesi non-combat Craftsman
+### Ditambahkan
+- Jalur Kelas combat ke-6: **Assassin → Shadowblade → Nightstalker**
+  (Melee Physical DPS, Dagger/Dual Blade) — `docs/01_GDD.md` §8.2,
+  `Configs/Classes.lua`.
+- Sistem profesi non-combat baru: **Craftsman** (§8.4 GDD), 3 rank
+  (Apprentice/Journeyman/Master Craftsman), config module baru
+  `Configs/Professions.lua` (skema resep + rank).
+### Diubah
+- `docs/03_DDD.md`: tambah `Configs/Professions.lua` ke daftar modul wajib,
+  contoh skema entry Profession/Recipe/Material item, dan field
+  `ProfessionId`/`ProfessionExp` di Player Profile schema.
+- `docs/01_GDD.md` §14 (Ekonomi): bullet crafting diarahkan ke §8.4,
+  bukan lagi "opsional fase lanjutan".
+### Catatan Teknis / Risiko
+- Murni data desain (Config) & dokumentasi, belum ada logic Service —
+  tidak ada permukaan exploit baru.
+- Perubahan ini menyentuh sistem yang sebelumnya berstatus "Selesai" di
+  progress tracker (Kelas & Crafting) — dilakukan atas instruksi eksplisit
+  pemilik project pada sesi ini, lihat `05_PROGRESS_TRACKER.md` Session Log.
+- Field `ProfessionId`/`ProfessionExp` di Player Profile baru berlaku saat
+  Profile system diimplementasi; wajib lewat migrasi resmi sesuai
+  `03_DDD.md` §5, bukan ditulis langsung ke schema versi berjalan.
+
 ## [2026-08-06] Finalisasi desain MVP: Ras, Kelas/Job Tier, Elemen, Zona/Gate
 ### Ditambahkan
 - Lore inti dunia **Arcadia** & konflik utama (Malgrath the Hollow King,

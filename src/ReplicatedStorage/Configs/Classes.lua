@@ -33,6 +33,26 @@ return {
 		jobChange = nil,
 	},
 
+	-- === Melee Physical DPS (Stealth/Crit) ===
+	Assassin = {
+		displayName = "Assassin", tier = 1, role = "MeleeDPS",
+		weaponTypes = { "Dagger", "DualBlade" },
+		skillIds = {},
+		jobChange = { nextClassId = "Shadowblade", requiredLevel = 15, requiredQuestId = "Q_JobChange_Shadowblade" },
+	},
+	Shadowblade = {
+		displayName = "Shadowblade", tier = 2, role = "MeleeDPS",
+		weaponTypes = { "Dagger", "DualBlade" },
+		skillIds = {},
+		jobChange = { nextClassId = "Nightstalker", requiredLevel = 40, requiredQuestId = "Q_JobChange_Nightstalker" },
+	},
+	Nightstalker = {
+		displayName = "Nightstalker", tier = 3, role = "MeleeDPS",
+		weaponTypes = { "Dagger", "DualBlade" },
+		skillIds = {},
+		jobChange = nil,
+	},
+
 	-- === Tank ===
 	Defender = {
 		displayName = "Defender", tier = 1, role = "Tank",

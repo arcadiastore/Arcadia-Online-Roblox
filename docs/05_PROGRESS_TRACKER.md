@@ -16,7 +16,8 @@
 | Sistem | Status | Catatan |
 |---|---|---|
 | Desain Ras final (5 ras) | ✅ | Data di `Configs/Races.lua`. Lihat `01_GDD.md` §8.1 |
-| Desain Kelas final (5 jalur, Tier 1–3) | ✅ | Data di `Configs/Classes.lua`. Lihat `01_GDD.md` §8.2 |
+| Desain Kelas combat final (6 jalur, Tier 1–3) | ✅ | Data di `Configs/Classes.lua`. Lihat `01_GDD.md` §8.2 (5 jalur awal + **Assassin→Shadowblade→Nightstalker**) |
+| Desain Profesi non-combat final (Craftsman) | ✅ | Data di `Configs/Professions.lua`. Lihat `01_GDD.md` §8.4. Terpisah dari Job Tier combat |
 | Character creation (pilih Ras) — implementasi | ⬜ | Data sudah siap, logic Service belum |
 | Character creation (pilih Kelas) — implementasi | ⬜ | Data sudah siap, logic Service belum |
 | Sistem stat & Combat Points — implementasi | ⬜ | |
@@ -53,6 +54,36 @@ _(Tambahkan baris baru bila ada sistem baru yang mulai dikerjakan — jangan hap
 
 ## 2. Session Log
 _(Entri terbaru di paling atas. Format lihat `04_AI_AGENT_RULES.md` §3.)_
+
+### [2026-08-06] Tambah jalur Kelas Assassin & profesi non-combat Craftsman
+- Dikerjakan: menambah **Assassin** sebagai jalur ke-6 Kelas combat
+  (Melee Physical DPS varian stealth/crit, Dagger/Dual Blade, chain
+  Assassin→Shadowblade→Nightstalker) di `01_GDD.md` §8.2 & `Classes.lua` —
+  bersifat aditif (jalur Warrior/Knight/Warlord dkk tidak diubah). Menambah
+  **Craftsman** sebagai profesi non-combat baru (§8.4, config module baru
+  `Configs/Professions.lua`), terpisah dari sistem Job Tier combat, dengan 3
+  rank (Apprentice/Journeyman/Master) & progression EXP sendiri. Player
+  Profile schema (`03_DDD.md` §4) ditambah field `ProfessionId`/
+  `ProfessionExp` (belum berlaku sampai Profile system diimplementasi &
+  lewat migrasi resmi, lihat `03_DDD.md` §5 poin 0). Perubahan ini
+  dikonfirmasi eksplisit oleh pemilik project sebagai bagian dari desain
+  final sekarang (bukan penambahan pasca-MVP terpisah), meski §8.2/Crafting
+  sebelumnya berstatus "Selesai" — sesuai `04_AI_AGENT_RULES.md` §1.3.
+- File yang disentuh: `docs/01_GDD.md`, `docs/03_DDD.md`,
+  `src/ReplicatedStorage/Configs/Classes.lua`,
+  `src/ReplicatedStorage/Configs/Professions.lua` (baru)
+- Status sistem yang berubah: "Desain Kelas final (5 jalur)" diganti jadi
+  "Desain Kelas combat final (6 jalur)" ✅ (tetap Selesai, isi bertambah);
+  baris baru "Desain Profesi non-combat final (Craftsman)" ⬜→✅
+- Diketahui belum selesai / next step: `Q_JobChange_Shadowblade` &
+  `Q_JobChange_Nightstalker` baru placeholder id (belum ada isi quest-nya,
+  sama seperti quest job-change kelas lain — lihat `Configs/Quests.lua`
+  yang masih skeleton). Resep Craftsman & item bertipe `"Material"` di
+  `Items.lua` belum didesain (`Professions.lua` recipe section masih
+  kosong). Skill Assassin & implementasi Service apapun untuk Craftsman
+  belum ada.
+- Catatan risiko/exploit yang perlu direview manusia: tidak ada (masih data
+  desain murni, belum ada logic Service yang berjalan).
 
 ### [2026-08-06] Finalisasi desain MVP: Ras, Kelas/Job Tier, Elemen, Zona/Gate
 - Dikerjakan: mengisi bagian yang tadinya placeholder di `01_GDD.md` (§5 Lore,
