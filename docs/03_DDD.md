@@ -160,8 +160,18 @@ Recipe_IronSword = {
 }
 ```
 
+**Implementasi teknis:** skema di atas diimplementasikan sebagai
+`ReplicatedStorage/Configs/ProfileTemplate.lua` (nilai default profil BARU) +
+`ServerStorage/Private/ProfileStore.lua` (engine DataStore session-locked) +
+`ServerScriptService/Services/DataService` (Service resmi, satu-satunya
+titik akses data pemain — lihat `02_TDD.md` §6). Asumsi yang diambil saat
+implementasi: `RaceId`/`ClassId` default **nil** (bukan `"Human"`/`"Warrior"`
+seperti contoh di atas), karena character creation belum diimplementasi —
+perlu dikonfirmasi pemilik project apakah ini perilaku yang diinginkan.
+
 ## 5. Aturan Versi & Migrasi Data
 0. `ProfessionId`/`ProfessionExp` di §4 adalah field baru (ditambahkan bersama desain Craftsman) — begitu implementasi Profile system mulai berjalan, penambahan ini wajib lewat migrasi resmi (poin 1–3 di bawah), bukan langsung ditulis ke schema versi berjalan, karena saat ditulis dokumen ini belum ada satupun data pemain di production.
+   **[Resolusi — implementasi Profile system]:** `Configs/ProfileTemplate.lua` (SchemaVersion baseline untuk pemain baru) memakai **SchemaVersion 2** (skema §4 sekarang, termasuk `ProfessionId`/`ProfessionExp`). Migrasi resmi `v1_to_v2` (`ServerScriptService/Services/DataService/ProfileMigrations/v1_to_v2.lua`) dibuat mengikuti poin 0 ini secara harfiah, walau pada praktiknya belum ada data v1 nyata di production — supaya jalur migrasi sudah teruji sebelum dibutuhkan sungguhan nanti.
 1. Setiap perubahan struktur `Player Profile` **menaikkan** `SchemaVersion`.
 2. Migrasi ditulis sebagai fungsi tambahan (`Migrations/v1_to_v2.lua`, dst.), dipanggil berurutan saat load data lama — **jangan** menghapus/menimpa field lama secara diam-diam.
 3. Field baru harus punya default value yang aman jika field itu belum ada di data lama (jangan asumsikan semua data pemain sudah punya field terbaru).

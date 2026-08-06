@@ -45,7 +45,7 @@ src/
 | `Inventory/UseItem` | Client→Server | itemId | kepemilikan item, jumlah, cooldown item |
 | `Quest/Accept` | Client→Server | questId | syarat level/prasyarat quest terpenuhi |
 | `Gate/RequestOpen` | Client→Server | gateId | syarat gate (level/quest/key) benar-benar terpenuhi di server |
-| `Data/GetProfile` | Client→Server (Function) | - | hanya kirim data milik pemain sendiri |
+| `Data/GetProfile` | Client→Server (Function) | - | hanya kirim data milik pemain sendiri (tidak ada parameter userId), rate-limited per player (`GetProfileMinIntervalSeconds`), deep copy sebelum dikirim (bukan reference server) — implementasi: `Services/DataService/RemoteHandlers.lua` |
 
 _(Tabel ini WAJIB diperbarui setiap kali menambah remote baru — jangan biarkan remote baru tanpa baris validasi.)_
 
@@ -91,4 +91,4 @@ Setiap keputusan teknis besar (ganti framework, ganti pola DataStore, dsb.) **wa
 
 | Tanggal | Perubahan | Alasan |
 |---|---|---|
-| _(kosong — isi saat ada keputusan)_ | | |
+| 2026-08-06 | Implementasi DataStore/Profile system pakai `ProfileStore.lua` **buatan sendiri** (pure Luau, `ServerStorage/Private/ProfileStore.lua`), BUKAN library eksternal populer seperti ProfileService/ProfileStore (Wally). | Project belum punya dependency manager (Wally) terpasang (lihat `aftman.toml` — cuma Rojo). Menambah dependency eksternal baru butuh persetujuan & pencatatan eksplisit di sini per `04_AI_AGENT_RULES.md` §1.9; daripada menambah Wally di tengah sesi tanpa arahan pemilik project, dibuat implementasi sendiri yang cukup untuk kebutuhan §6 (session lock, auto-retry, autosave, save saat leave/shutdown). **Bisa direvisit**: kalau pemilik project lebih memilih ProfileService/ProfileStore asli (lebih teruji di produksi skala besar), ganti di sesi terpisah dengan mencatat alasan & migrasi datanya di sini — jangan diam-diam diganti.|

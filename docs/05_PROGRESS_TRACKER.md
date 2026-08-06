@@ -8,7 +8,7 @@
 | Sistem | Status | Catatan |
 |---|---|---|
 | Struktur project Rojo | 🔄 | Skeleton folder + `default.project.json` + Config kosong sudah dibuat. Belum ada logic Service/Controller. |
-| DataStore / Profile system | ⬜ | |
+| DataStore / Profile system | 🔄 | Implementasi kode selesai (ProfileStore session-locked + DataService + migrasi v1→v2 + remote `Data/GetProfile`). Belum ✅ karena belum dites manual di Roblox Studio (syarat wajib `04_AI_AGENT_RULES.md` §2). |
 | Service/Controller pattern dasar | ⬜ | |
 | Remote validation framework dasar | ⬜ | |
 
@@ -54,6 +54,60 @@ _(Tambahkan baris baru bila ada sistem baru yang mulai dikerjakan — jangan hap
 
 ## 2. Session Log
 _(Entri terbaru di paling atas. Format lihat `04_AI_AGENT_RULES.md` §3.)_
+
+### [2026-08-06] Implementasi DataStore / Profile system
+- Dikerjakan: implementasi penuh sistem penyimpanan data pemain sesuai
+  `02_TDD.md` §6 & `03_DDD.md` §4-5.
+  - `ServerStorage/Private/ProfileStore.lua`: engine DataStore session-locked
+    buatan sendiri (pure Luau, tanpa dependency eksternal — lihat
+    `02_TDD.md` §11 untuk alasan keputusan ini) dengan auto-retry+backoff,
+    autosave berkala, save saat player leave & `game:BindToClose`.
+  - `ReplicatedStorage/Configs/ProfileTemplate.lua`: skema default profil
+    baru, SchemaVersion 2 (sudah termasuk `ProfessionId`/`ProfessionExp`).
+  - `ServerScriptService/Services/DataService/` (Service utama +
+    `ProfileMigrations/` + `RemoteHandlers.lua`): satu-satunya titik akses
+    resmi data pemain (`DataService.GetProfile`/`WaitForProfile`/`IsLoaded`),
+    menjalankan migrasi resmi v1→v2 (`ProfessionId`/`ProfessionExp`) sesuai
+    `03_DDD.md` §5 poin 0, plus jaring pengaman `TableUtil.ReconcileDefaults`.
+  - Remote `Data/GetProfile` (RemoteFunction, sudah ada di tabel `02_TDD.md`
+    §5 sebelumnya) diimplementasikan: rate-limited per player, hanya kirim
+    data milik pemain sendiri, deep copy sebelum dikirim ke client.
+  - `ReplicatedStorage/Shared/TableUtil.lua` (util baru, dipakai luas):
+    `DeepCopy` & `ReconcileDefaults`.
+  - `ServerScriptService/Main.server.lua` (bootstrap baru) + `Main` entry
+    baru di `default.project.json` untuk memanggil `DataService.Init()`.
+- File yang disentuh: `docs/02_TDD.md` (§5 update baris remote, §11 catat
+  keputusan arsitektur), `docs/03_DDD.md` (§5 resolusi migrasi, catatan
+  implementasi & asumsi RaceId/ClassId default nil), `default.project.json`,
+  `src/ReplicatedStorage/Shared/{TableUtil,DataConstants}.lua`,
+  `src/ReplicatedStorage/Configs/ProfileTemplate.lua`,
+  `src/ReplicatedStorage/Remotes/Data/GetProfile.model.json`,
+  `src/ServerStorage/Private/ProfileStore.lua`,
+  `src/ServerScriptService/Services/DataService/**`,
+  `src/ServerScriptService/Main.server.lua`.
+- Status sistem yang berubah: "DataStore / Profile system" ⬜→🔄 (kode
+  selesai, belum ✅ — lihat catatan di tabel status di atas).
+- Diketahui belum selesai / next step: **belum diuji manual di Roblox
+  Studio sama sekali** (AI tidak punya akses runtime Roblox) — wajib
+  Play Solo/Team Test sebelum ditandai ✅, termasuk skenario: join normal,
+  dua sesi/server rebut profil yang sama (cek session lock benar-benar
+  menolak), player leave cepat sebelum load selesai, server shutdown
+  (`BindToClose`) benar-benar menyimpan. Asumsi `RaceId`/`ClassId` default
+  `nil` (bukan `"Human"`/`"Warrior"`) perlu dikonfirmasi pemilik project —
+  lihat `03_DDD.md` §4 catatan implementasi. `Service/Controller pattern
+  dasar` & `Remote validation framework dasar` masih ⬜ terpisah — DataService
+  baru mengimplementasikan pola untuk dirinya sendiri, belum ada
+  util/base-class Service generik untuk sistem lain.
+- Catatan risiko/exploit yang perlu direview manusia: remote `Data/GetProfile`
+  sudah lolos checklist dasar (`06_CODING_STANDARDS.md` §3: tipe/rate-limit/
+  filter data), tapi **belum pernah dites live** — perlu verifikasi manual
+  bahwa rate-limit & deep-copy benar-benar berfungsi di Studio. Session-lock
+  di `ProfileStore.lua` punya limitasi: tidak ada MessagingService
+  cross-server "release segera", server lain menunggu
+  `SessionLockTimeoutSeconds` (30 detik) sebelum boleh mencuri lock dari
+  server yang crash — didokumentasikan di header `ProfileStore.lua`, cukup
+  untuk MVP single-place tapi perlu direview ulang saat Reserved
+  Server/dungeon instance mulai dipakai.
 
 ### [2026-08-06] Skema aset visual (meshId/textureId/iconId) di Items.lua
 - Dikerjakan: menambah konvensi field aset visual 3D/2D untuk item

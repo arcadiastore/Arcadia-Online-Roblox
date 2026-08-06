@@ -17,6 +17,51 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] Implementasi DataStore / Profile system
+### Ditambahkan
+- `ProfileStore.lua` (`ServerStorage/Private`): engine DataStore
+  session-locked buatan sendiri — auto-retry+backoff, session lock antar
+  server, autosave berkala, save saat player leave & server shutdown
+  (`game:BindToClose`).
+- `DataService` (`ServerScriptService/Services/DataService/`): Service resmi
+  satu-satunya titik akses data pemain (`GetProfile`/`WaitForProfile`/
+  `IsLoaded`), termasuk sub-modul `ProfileMigrations` (migrasi resmi
+  SchemaVersion 1→2, menambah `ProfessionId`/`ProfessionExp`) dan
+  `RemoteHandlers` (wiring remote `Data/GetProfile`).
+- `ProfileTemplate.lua` (`ReplicatedStorage/Configs`): skema default profil
+  pemain baru, SchemaVersion 2.
+- `TableUtil.lua` (`ReplicatedStorage/Shared`): util `DeepCopy` &
+  `ReconcileDefaults`, dipakai ProfileStore & DataService.
+- `DataConstants.lua` (`ReplicatedStorage/Shared`): konstanta nama
+  DataStore, interval autosave, timeout session lock, dsb.
+- Remote `Data/GetProfile` (RemoteFunction) — instance dibuat via
+  `Remotes/Data/GetProfile.model.json`, diimplementasikan rate-limited per
+  player & hanya mengirim data milik pemain sendiri (deep copy).
+- `Main.server.lua` (`ServerScriptService`, bootstrap) + entry baru di
+  `default.project.json` untuk memanggil `DataService.Init()` saat server start.
+### Diubah
+- `docs/03_DDD.md` §5: resolusi eksplisit bahwa migrasi `ProfessionId`/
+  `ProfessionExp` (v1→v2) dijalankan sebagai migrasi resmi pertama, bukan
+  ditulis langsung ke schema berjalan — sesuai catatan di poin 0 dokumen
+  yang sama.
+- `docs/02_TDD.md` §5: detail validasi remote `Data/GetProfile` diperjelas
+  sesuai implementasi aktual. §11: keputusan arsitektur "ProfileStore
+  buatan sendiri, bukan library eksternal" dicatat dengan alasan (belum ada
+  dependency manager/Wally terpasang).
+### Catatan Teknis / Risiko
+- **Belum dites manual di Roblox Studio** — AI tidak punya akses runtime
+  Roblox, jadi fitur ini masih 🔄 (bukan ✅) di progress tracker sampai
+  pemilik project menguji langsung (join normal, rebutan session lock antar
+  server, leave cepat, server shutdown). Lihat detail skenario uji di
+  `05_PROGRESS_TRACKER.md` session log.
+- Session lock tidak pakai MessagingService untuk release lintas-server
+  segera — server lain menunggu timeout 30 detik sebelum boleh mencuri lock
+  dari server yang crash tanpa sempat `Release()`. Didokumentasikan sebagai
+  limitasi yang diketahui di header `ProfileStore.lua`.
+- Asumsi desain: `RaceId`/`ClassId` default `nil` untuk profil baru (character
+  creation belum diimplementasikan) — perlu dikonfirmasi pemilik project,
+  lihat `docs/03_DDD.md` §4.
+
 ## [2026-08-06] Skema aset visual (meshId/textureId/iconId) di Items.lua
 ### Ditambahkan
 - Konvensi field aset visual untuk item: `meshId` (model 3D MeshPart),
