@@ -17,7 +17,8 @@ local BaseController = require(ControllersFolder:WaitForChild("BaseController"))
 -- === Daftar Controller (urutkan sesuai dependency) ===
 -- Tambahkan entry baru di sini saat Controller pertama diimplementasi.
 local CharacterCreationController = require(ControllersFolder:WaitForChild("CharacterCreationController"))
-local controllers = { CharacterCreationController }
+local GateController = require(ControllersFolder:WaitForChild("GateController"))
+local controllers = { CharacterCreationController, GateController }
 
 -- === Phase 1: Register semua Controller ===
 for _, ctrl in ipairs(controllers) do

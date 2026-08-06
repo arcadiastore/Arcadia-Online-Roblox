@@ -32,6 +32,7 @@ return {
 	Inventory = {},
 	Equipment = {},
 	QuestLog = {},
+	CompletedQuests = {}, -- [questId] = true — dipakai GateService cek syarat gate
 	UnlockedGates = {},
 	Achievements = {},
 	Settings = {},
