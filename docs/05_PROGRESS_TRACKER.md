@@ -19,7 +19,7 @@
 | Desain Kelas combat final (6 jalur, Tier 1–3) | ✅ | Data di `Configs/Classes.lua`. Lihat `01_GDD.md` §8.2 (5 jalur awal + **Assassin→Shadowblade→Nightstalker**) |
 | Desain Profesi non-combat final (Craftsman) | ✅ | Data di `Configs/Professions.lua`. Lihat `01_GDD.md` §8.4. Terpisah dari Job Tier combat |
 | Character creation (pilih Ras) — implementasi | ✅ | `CharacterService` + remotes `RerollRace`/`ConfirmRace`/`CreationStatus`. RNG berbobot di server. Stat bonus ras diterapkan ke profile saat konfirmasi. Tested di Studio. |
-| Character creation (pilih Kelas) — implementasi | ✅ | Remote `SelectClass` di `CharacterService`. Validasi Tier 1 only. Tested di Studio. |
+| Character creation (pilih Kelas) — implementasi | ✅ | Remote `SelectClass` di `CharacterCreationService`. Validasi Tier 1 only. Tested di Studio. UI CharacterCreation (race reveal + class select) tested — Evil/Assassin flow sukses. |
 | Sistem stat & Combat Points — implementasi | ✅ | `LevelService.AllocateCP` (direct API + remote). Tested: alokasi CP sukses, invalid stat ditolak, CP berkurang. |
 | Leveling / EXP curve | ✅ | `LevelCurve.lua` + `LevelService`. Tested: EXP required, base stats, CP gain, level-up otomatis, max level cap, `AllocateCP`. Semua 29 test lulus. |
 | Job change — implementasi | ⬜ | Syarat per tier sudah ada di `Configs/Classes.lua`, logic belum |

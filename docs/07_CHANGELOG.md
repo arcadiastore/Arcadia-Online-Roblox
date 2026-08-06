@@ -17,6 +17,23 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] CharacterCreation UI — tested ✅
+### Ditambahkan
+- `CharacterCreation/init.lua` (StarterGui/UI): full race reveal + class select
+  UI dengan tema Portal/Arcadia. Animasi orb, rarity tag, stat pills, class
+  grid cards.
+- `CharacterCreationController.lua` (StarterPlayerScripts/Controllers):
+  client-side controller yang menghubungkan UI ke server remotes.
+### Diperbaiki
+- `Enum.Font.Cinzel` → `Enum.Font.GothamBlack` (font tidak ada di Roblox).
+- `newLabel` Position/AnchorPoint nil crash → guard with if-check.
+- UI scale ~30% lebih kecil untuk Studio viewport.
+- `DataService.ResetToTemplate` — test cleanup reset profile ke fresh state
+  supaya `Release()` simpan data bersih.
+- Controller: pcall wrapper untuk semua `InvokeServer` calls.
+
+---
+
 ## [2026-08-06] LevelService + AllocateCP — tested ✅
 ### Ditambahkan
 - `LevelService.AllocateCP(player, statName)` direct API method — bisa
