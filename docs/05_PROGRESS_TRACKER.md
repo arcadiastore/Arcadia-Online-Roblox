@@ -41,7 +41,7 @@
 |---|---|---|
 | Party system | ⬜ | |
 | Shop / currency | ⬜ | |
-| Inventory & equipment | ⬜ | |
+| Inventory & equipment | ✅ | `InventoryService.lua`: AddItem, RemoveItem, EquipItem, UnequipItem, UseItem, GetInventory, GetEquipment, GetEquipmentStats, HasItem. `Items.lua`: 27 item (weapon/armor/shield/accessory/consumable/material/quest). Remote 4 endpoint. Tested 122/122. |
 
 ### Lanjutan
 | Sistem | Status | Catatan |

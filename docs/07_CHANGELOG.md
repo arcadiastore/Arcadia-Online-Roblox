@@ -17,6 +17,22 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] InventoryService + Items — tested ✅
+### Ditambahkan
+- `InventoryService/init.lua` (ServerScriptService/Services): server-authoritative
+  inventory & equipment. API: `AddItem`, `RemoveItem`, `EquipItem`, `UnequipItem`,
+  `UseItem`, `GetInventory`, `GetEquipment`, `GetEquipmentStats`, `HasItem`.
+  Equipment slots: Weapon, Head, Chest, Legs, Feet, Shield, Accessory.
+  Remote `Inventory/GetInventory`, `Inventory/Equip`, `Inventory/Unequip`,
+  `Inventory/UseItem`. Stackable items, max 50 inventory slots.
+- `Items.lua`: 27 item definitions — 7 weapon (tier 1-2), 5 armor, 1 shield,
+  2 accessory, 3 consumable (HP/MP/Antidote), 4 material, 1 quest item.
+  Full stats, rarity, element, level/class requirements.
+- Remote model: `Inventory/GetInventory`, `Inventory/Equip`, `Inventory/Unequip`,
+  `Inventory/UseItem`.
+
+---
+
 ## [2026-08-06] CombatService + DamageFormula — tested ✅
 ### Ditambahkan
 - `CombatService/init.lua` (ServerScriptService/Services): server-authoritative
