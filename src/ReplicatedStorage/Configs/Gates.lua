@@ -1,13 +1,30 @@
 --[[
 	Gates.lua
-	Skeleton config module — belum diisi data desain final.
+	Sumber kebenaran data Gate/Portal. Lihat docs/01_GDD.md §6 dan §11.
 
-	Skema & contoh entry: lihat docs/03_DDD.md.
-	Isi tabel di bawah setelah konten terkait difinalisasi di docs/01_GDD.md.
-	JANGAN taruh angka/nama sistem ini langsung di dalam Service — semua
-	logic wajib require() modul ini (aturan anti-hardcode, docs/06_CODING_STANDARDS.md §2).
+	requirement.type: "Level" | "Quest" | "Item" | "LevelAndQuest" (kombinasi
+	dicek oleh GateService — field ini hanya data, bukan logic).
 ]]
 
 return {
-	-- contoh: Id = { field = value, ... },
+	Gate_Duskwood = {
+		displayName = "Gate of Duskwood",
+		destinationZone = "DuskwoodForest",
+		requirement = { type = "LevelAndQuest", level = 10, questId = "Q_OpenGate_Duskwood" },
+	},
+	Gate_Frostpeak = {
+		displayName = "Gate of Frostpeak",
+		destinationZone = "FrostpeakMountains",
+		requirement = { type = "LevelAndQuest", level = 25, questId = "Q_OpenGate_Frostpeak" },
+	},
+	Gate_SunkenCrypt = {
+		displayName = "Gate of the Sunken Crypt",
+		destinationZone = "SunkenCrypt",
+		requirement = { type = "Item", itemId = "SunkenCryptKey" },
+	},
+	Gate_ShatteredSanctum = {
+		displayName = "Gate of the Shattered Sanctum",
+		destinationZone = "ShatteredSanctum",
+		requirement = { type = "Quest", questId = "Q_AllMainGatesCleared" },
+	},
 }

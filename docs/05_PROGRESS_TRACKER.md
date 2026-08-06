@@ -15,21 +15,25 @@
 ### Karakter & Progression
 | Sistem | Status | Catatan |
 |---|---|---|
-| Character creation (pilih Ras) | ⬜ | |
-| Character creation (pilih Kelas) | ⬜ | |
-| Sistem stat & Combat Points | ⬜ | |
-| Leveling / EXP curve | ⬜ | |
-| Job change | ⬜ | |
+| Desain Ras final (5 ras) | ✅ | Data di `Configs/Races.lua`. Lihat `01_GDD.md` §8.1 |
+| Desain Kelas final (5 jalur, Tier 1–3) | ✅ | Data di `Configs/Classes.lua`. Lihat `01_GDD.md` §8.2 |
+| Character creation (pilih Ras) — implementasi | ⬜ | Data sudah siap, logic Service belum |
+| Character creation (pilih Kelas) — implementasi | ⬜ | Data sudah siap, logic Service belum |
+| Sistem stat & Combat Points — implementasi | ⬜ | |
+| Leveling / EXP curve | ⬜ | `Configs/LevelCurve.lua` masih skeleton kosong |
+| Job change — implementasi | ⬜ | Syarat per tier sudah ada di `Configs/Classes.lua`, logic belum |
 
 ### Gameplay Inti
 | Sistem | Status | Catatan |
 |---|---|---|
-| Sistem elemen (Element Chart) | ⬜ | |
+| Desain Element Chart final | ✅ | Data di `Configs/Elements.lua`. Lihat `01_GDD.md` §9 |
+| Sistem elemen — implementasi combat | ⬜ | Data sudah siap, logic Service belum |
 | Sistem combat dasar (attack + skill) | ⬜ | |
-| Gate/Portal system | ⬜ | |
-| Zona 1 (Starting Village) | ⬜ | |
-| Dungeon instance pertama | ⬜ | |
-| Quest system (main quest) | ⬜ | |
+| Desain Zona & Gate final (Millhaven → Shattered Sanctum) | ✅ | Lihat `01_GDD.md` §6, data gate di `Configs/Gates.lua` |
+| Gate/Portal system — implementasi | ⬜ | Data sudah siap, logic Service belum |
+| Zona 1 (Millhaven) — build/implementasi | ⬜ | |
+| Dungeon instance pertama (The Sunken Crypt) | ⬜ | |
+| Quest system (main quest) | ⬜ | `Configs/Quests.lua` masih skeleton kosong; id quest job-change/gate sudah direferensikan di Classes.lua & Gates.lua sebagai placeholder |
 
 ### Sosial & Ekonomi
 | Sistem | Status | Catatan |
@@ -49,6 +53,26 @@ _(Tambahkan baris baru bila ada sistem baru yang mulai dikerjakan — jangan hap
 
 ## 2. Session Log
 _(Entri terbaru di paling atas. Format lihat `04_AI_AGENT_RULES.md` §3.)_
+
+### [2026-08-06] Finalisasi desain MVP: Ras, Kelas/Job Tier, Elemen, Zona/Gate
+- Dikerjakan: mengisi bagian yang tadinya placeholder di `01_GDD.md` (§5 Lore,
+  §6 Zona, §8.1 Ras, §8.2 Kelas, §9 Elemen, §19 Roadmap) dengan keputusan
+  desain final MVP sesuai arahan pemilik project (5 Ras: Human/Elf/Dwarf/
+  Angel/Evil; 5 jalur Kelas linear Tier 1-3; 6 elemen dengan chart siklus
+  4-elemen + Light/Dark saling counter; 5 zona/gate: Millhaven, Duskwood
+  Forest, Frostpeak Mountains, The Sunken Crypt, The Shattered Sanctum).
+  Data diturunkan langsung ke `Configs/Races.lua`, `Configs/Classes.lua`,
+  `Configs/Elements.lua`, `Configs/Gates.lua`.
+- File yang disentuh: `docs/01_GDD.md`, `src/ReplicatedStorage/Configs/
+  {Races,Classes,Elements,Gates}.lua`
+- Status sistem yang berubah: Desain Ras/Kelas/Elemen/Zona ⬜→✅ (desain),
+  implementasi teknis semua sistem terkait masih ⬜ (belum ada logic Service)
+- Diketahui belum selesai / next step: `Skills.lua`, `Items.lua`,
+  `Enemies.lua`, `Quests.lua`, `LevelCurve.lua` masih skeleton kosong —
+  quest id (job change, buka gate) baru placeholder, isi kontennya belum
+  didesain. Belum ada satu Service/Controller pun yang berlogic.
+- Catatan risiko/exploit yang perlu direview manusia: tidak ada (masih data
+  desain murni, belum ada logic yang berjalan).
 
 ### [2026-08-06] Scaffolding struktur Rojo
 - Dikerjakan: buat `default.project.json` (manifest Rojo), skeleton folder

@@ -1,13 +1,17 @@
 --[[
 	Elements.lua
-	Skeleton config module — belum diisi data desain final.
+	Element Chart — sumber kebenaran relasi kuat/lemah antar elemen.
+	Lihat docs/01_GDD.md §9 untuk rasionalisasi desain.
 
-	Skema & contoh entry: lihat docs/03_DDD.md.
-	Isi tabel di bawah setelah konten terkait difinalisasi di docs/01_GDD.md.
-	JANGAN taruh angka/nama sistem ini langsung di dalam Service — semua
-	logic wajib require() modul ini (aturan anti-hardcode, docs/06_CODING_STANDARDS.md §2).
+	CombatService WAJIB require() modul ini untuk menentukan multiplier damage,
+	bukan menulis ulang relasi ini di dalam logic combat.
 ]]
 
 return {
-	-- contoh: Id = { field = value, ... },
+	Fire  = { strongAgainst = { "Wind" },  weakAgainst = { "Water" } },
+	Water = { strongAgainst = { "Fire" },  weakAgainst = { "Earth" } },
+	Earth = { strongAgainst = { "Water" }, weakAgainst = { "Wind" } },
+	Wind  = { strongAgainst = { "Earth" }, weakAgainst = { "Fire" } },
+	Light = { strongAgainst = { "Dark" },  weakAgainst = { "Dark" } },
+	Dark  = { strongAgainst = { "Light" }, weakAgainst = { "Light" } },
 }
