@@ -19,6 +19,9 @@
       "Services": {
         "$path": "src/ServerScriptService/Services"
       },
+      "Tests": {
+        "$path": "src/ServerScriptService/Tests"
+      },
       "Main": {
         "$path": "src/ServerScriptService/Main.server.lua"
       }
