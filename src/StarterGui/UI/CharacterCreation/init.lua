@@ -70,7 +70,7 @@ local ROLE_ICON = {
 
 local STAT_ORDER = { "STR", "VIT", "INT", "AGI", "LUK" }
 
-local FONT_TITLE = Enum.Font.Cinzel
+local FONT_TITLE = Enum.Font.GothamBlack
 local FONT_HEADING = Enum.Font.GothamBold
 local FONT_BODY = Enum.Font.Gotham
 
