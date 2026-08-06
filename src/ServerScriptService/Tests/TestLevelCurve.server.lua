@@ -303,24 +303,33 @@ task.spawn(function()
 	print(("  📊 TryOpenGate('FakeGate'): %s (%s)"):format(tostring(g1.success), tostring(g1.reason)))
 	assert_true("FakeGate ditolak", not g1.success)
 
-	-- 4b. Gate dengan syarat level terpenuhi (Duskwood perlu Lv10)
+	-- 4b. Gate_Duskwood (LevelAndQuest: Lv10 + quest)
+	-- Level sudah cukup, tapi quest belum → ditolak dulu
 	local g2 = GateService.TryOpenGate(player, "Gate_Duskwood")
-	print(("  📊 TryOpenGate('Gate_Duskwood'): %s, dest=%s"):format(
-		tostring(g2.success), tostring(g2.destination)))
-	assert_true("Gate_Duskwood sukses", g2.success)
-	assert_eq("Dest = DuskwoodForest", g2.destination, "DuskwoodForest")
+	print(("  📊 TryOpenGate('Gate_Duskwood') tanpa quest: %s (%s)"):format(
+		tostring(g2.success), tostring(g2.reason)))
+	assert_true("Duskwood ditolak (no quest)", not g2.success)
 
-	-- 4c. Gate sudah terbuka (idempotent)
+	-- 4c. Tambah quest ke CompletedQuests, coba lagi
+	if not data.CompletedQuests then data.CompletedQuests = {} end
+	data.CompletedQuests["Q_OpenGate_Duskwood"] = true
 	local g3 = GateService.TryOpenGate(player, "Gate_Duskwood")
-	print(("  📊 TryOpenGate lagi: %s, alreadyUnlocked=%s"):format(
-		tostring(g3.success), tostring(g3.alreadyUnlocked)))
-	assert_true("Already unlocked", g3.alreadyUnlocked)
+	print(("  📊 TryOpenGate('Gate_Duskwood') + quest: %s, dest=%s"):format(
+		tostring(g3.success), tostring(g3.destination)))
+	assert_true("Duskwood sukses", g3.success)
+	assert_eq("Dest = DuskwoodForest", g3.destination, "DuskwoodForest")
 
-	-- 4d. Gate dengan syarat quest (belum punya quest → ditolak)
-	local g4 = GateService.TryOpenGate(player, "Gate_Frostpeak")
+	-- 4d. Gate sudah terbuka (idempotent)
+	local g4 = GateService.TryOpenGate(player, "Gate_Duskwood")
+	print(("  📊 TryOpenGate lagi: %s, alreadyUnlocked=%s"):format(
+		tostring(g4.success), tostring(g4.alreadyUnlocked)))
+	assert_true("Already unlocked", g4.alreadyUnlocked)
+
+	-- 4e. Gate_Frostpeak (LevelAndQuest: Lv25 + quest) — quest belum
+	local g5 = GateService.TryOpenGate(player, "Gate_Frostpeak")
 	print(("  📊 TryOpenGate('Gate_Frostpeak'): %s (%s)"):format(
-		tostring(g4.success), tostring(g4.reason)))
-	assert_true("Frostpeak ditolak (no quest)", not g4.success)
+		tostring(g5.success), tostring(g5.reason)))
+	assert_true("Frostpeak ditolak (no quest)", not g5.success)
 
 	-- 4e. GetUnlockedGates
 	local unlocked = GateService.GetUnlockedGates(player)
