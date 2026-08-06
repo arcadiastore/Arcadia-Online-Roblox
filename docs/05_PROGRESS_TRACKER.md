@@ -22,7 +22,7 @@
 | Character creation (pilih Kelas) — implementasi | ✅ | Remote `SelectClass` di `CharacterCreationService`. Validasi Tier 1 only. Tested di Studio. UI CharacterCreation (race reveal + class select) tested — Evil/Assassin flow sukses. |
 | Sistem stat & Combat Points — implementasi | ✅ | `LevelService.AllocateCP` (direct API + remote). Tested: alokasi CP sukses, invalid stat ditolak, CP berkurang. |
 | Leveling / EXP curve | ✅ | `LevelCurve.lua` + `LevelService`. Tested: EXP required, base stats, CP gain, level-up otomatis, max level cap, `AllocateCP`. Semua 29 test lulus. |
-| Job change — implementasi | ⬜ | Syarat per tier sudah ada di `Configs/Classes.lua`, logic belum |
+| Job change — implementasi | ✅ | `JobChangeService.lua`: TryJobChange, validasi level+quest, ClassTier tracking. Remote `Character/JobChange`. Tested: no class→tolak, questbelum→tolak, Warrior→Knight→Warlord, tier max→tolak (72/72). |
 
 ### Gameplay Inti
 | Sistem | Status | Catatan |

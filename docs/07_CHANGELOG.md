@@ -17,6 +17,17 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] JobChangeService — tested ✅
+### Ditambahkan
+- `JobChangeService/init.lua` (ServerScriptService/Services): server-authoritative
+  job change. API: `TryJobChange(player)`. Cek: ClassId ada, bukan Tier 3,
+  Level >= requiredLevel, CompletedQuests[requiredQuestId]. Update ClassId +
+  ClassTier. Remote `Character/JobChange` (rate-limited 2s).
+- `ClassTier` field di ProfileTemplate (1/2/3).
+- Remote model: `Character/JobChange`.
+
+---
+
 ## [2026-08-06] Gate/Portal system — tested ✅
 ### Ditambahkan
 - `GateService.lua` (ServerScriptService/Services): server-authoritative gate
