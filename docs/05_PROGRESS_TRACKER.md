@@ -20,8 +20,8 @@
 | Desain Profesi non-combat final (Craftsman) | ✅ | Data di `Configs/Professions.lua`. Lihat `01_GDD.md` §8.4. Terpisah dari Job Tier combat |
 | Character creation (pilih Ras) — implementasi | ✅ | `CharacterService` + remotes `RerollRace`/`ConfirmRace`/`CreationStatus`. RNG berbobot di server. Stat bonus ras diterapkan ke profile saat konfirmasi. Tested di Studio. |
 | Character creation (pilih Kelas) — implementasi | ✅ | Remote `SelectClass` di `CharacterService`. Validasi Tier 1 only. Tested di Studio. |
-| Sistem stat & Combat Points — implementasi | 🔄 | `LevelService.AllocateCP` + remote `Level/AllocateCP`. Base stat recalculated otomatis saat level-up via `LevelCurve.GetBaseStats()`. CP dialokasikan manual ke stat pilihan pemain. Belum ✅ belum dites manual. |
-| Leveling / EXP curve | 🔄 | `LevelCurve.lua` sudah diisi: formula EXP kuadratik, MaxLevel 50, base stat +2/level, 3 CP/level. `LevelService` sudah diimplementasi: `AddExp` (server-only API), proses level-up otomatis, `AllocateCP` (remote), notifikasi `LevelUp` ke client. Belum ✅ belum dites manual. |
+| Sistem stat & Combat Points — implementasi | ✅ | `LevelService.AllocateCP` (direct API + remote). Tested: alokasi CP sukses, invalid stat ditolak, CP berkurang. |
+| Leveling / EXP curve | ✅ | `LevelCurve.lua` + `LevelService`. Tested: EXP required, base stats, CP gain, level-up otomatis, max level cap, `AllocateCP`. Semua 29 test lulus. |
 | Job change — implementasi | ⬜ | Syarat per tier sudah ada di `Configs/Classes.lua`, logic belum |
 
 ### Gameplay Inti
@@ -54,6 +54,24 @@ _(Tambahkan baris baru bila ada sistem baru yang mulai dikerjakan — jangan hap
 
 ## 2. Session Log
 _(Entri terbaru di paling atas. Format lihat `04_AI_AGENT_RULES.md` §3.)_
+
+### [2026-08-06] LevelService + AllocateCP — tested ✅
+- Dikerjakan: implementasi & testing LevelService dan Combat Points allocation.
+  - `LevelService.lua`: extends BaseService. API: `AddExp(player, amount)`,
+    `AllocateCP(player, statName)`, `GetLevel()`, `GetRequiredExpForNextLevel()`,
+    `GetProgressPercent()`, `GetUnspentPoints()`. Auto level-up, base stat
+    recalculation, CP gain per level, LevelUp notification ke client.
+  - `CharacterService.lua`: refactor — extract direct API methods
+    (`RerollRace`, `ConfirmRace`, `SelectClass`) supaya bisa dipanggil
+    dari server test tanpa RemoteFunction.
+  - `TestLevelCurve.server.lua` v4: full auto test (Play Solo, no Command Bar).
+    29/29 lulus: LevelCurve config, EXP formula, base stats, CP gain,
+    max level cap, AllocateCP valid/invalid, EXP overflow.
+- File yang disentuh:
+  `src/ServerScriptService/Services/LevelService/init.lua` (AllocateCP as direct API),
+  `src/ServerScriptService/Services/CharacterService/init.lua` (API refactor),
+  `src/ServerScriptService/Tests/TestLevelCurve.server.lua` (v4),
+  `docs/05_PROGRESS_TRACKER.md`, `docs/07_CHANGELOG.md`.
 
 ### [2026-08-06] Service/Controller pattern + RemoteValidator + CharacterService
 - Dikerjakan: implementasi infrastruktur dasar arsitektur Service/Controller

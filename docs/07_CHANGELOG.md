@@ -17,6 +17,24 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] LevelService + AllocateCP — tested ✅
+### Ditambahkan
+- `LevelService.AllocateCP(player, statName)` direct API method — bisa
+  dipanggil dari server script (test, admin) tanpa remote.
+- `CharacterService` direct API: `RerollRace`, `ConfirmRace`,
+  `SelectClass` — server-only callable.
+- `TestLevelCurve.server.lua` v4: 29/29 test lulus (Play Solo otomatis).
+### Diubah
+- `CharacterService/init.lua`: refactored — remote handlers wrap direct
+  API methods, bukan inline logic.
+- `LevelService/init.lua`: extract `AllocateCP` dari inline
+  `OnServerInvoke` jadi standalone method.
+### Diperbaiki
+- Test script sekarang handle player yang sudah Lv50 (max level cap).
+- EXP comparison di test: simpan `oldExp` sebelum mutate.
+
+---
+
 ## [2026-08-06] LevelCurve + LevelService (leveling, EXP, Combat Points)
 ### Ditambahkan
 - `LevelCurve.lua` (`ReplicatedStorage/Configs/`): config EXP progression
