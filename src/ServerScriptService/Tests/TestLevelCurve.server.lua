@@ -346,6 +346,98 @@ task.spawn(function()
 	assert_eq("ClassId = Warlord", data.ClassId, "Warlord")
 	assert_eq("ClassTier = 3", data.ClassTier, 3)
 
+	-- ========================================
+	-- BAGIAN 6: QuestService
+	-- ========================================
+	section("BAGIAN 6: QuestService")
+
+	local QuestService = require(ServerScriptService.Services.QuestService)
+
+	-- Reset profile fresh
+	DataService.ResetToTemplate(player)
+	task.wait(0.2)
+	-- Setup: pilih class + level up
+	CharService2.RerollRace(player)
+	CharService2.ConfirmRace(player, "Human")
+	CharService2.SelectClass(player, "Warrior")
+	LevelService:AddExp(player, 50000) -- Lv40+
+	data = DataService.GetProfile(player)
+	print(("  📊 Setup: Lv%d"):format(data.Level))
+
+	-- 6a. Accept quest tidak valid
+	local q1 = QuestService:AcceptQuest(player, "FakeQuest")
+	print(("  📊 AcceptQuest('FakeQuest'): %s (%s)"):format(tostring(q1.success), tostring(q1.reason)))
+	assert_true("FakeQuest ditolak", not q1.success)
+
+	-- 6b. Accept quest tanpa prereq (Q_Millhaven_Intro, Lv1)
+	local q2 = QuestService:AcceptQuest(player, "Q_Millhaven_Intro")
+	print(("  📊 AcceptQuest('Q_Millhaven_Intro'): %s, name=%s"):format(
+		tostring(q2.success), tostring(q2.questName)))
+	assert_true("Intro accepted", q2.success)
+
+	-- 6c. Accept lagi (sudah aktif)
+	local q3 = QuestService:AcceptQuest(player, "Q_Millhaven_Intro")
+	print(("  📊 AcceptQuest lagi: %s (%s)"):format(tostring(q3.success), tostring(q3.reason)))
+	assert_true("Sudah aktif → tolak", not q3.success)
+
+	-- 6d. ReportProgress (server-side only)
+	QuestService:ReportProgress(player, "NPC_ElderAldric", 1)
+	local log1 = QuestService:GetQuestLog(player)
+	local introEntry = log1.questLog and log1.questLog["Q_Millhaven_Intro"]
+	print(("  📊 Progress NPC_ElderAldric: %d/1"):format(
+		introEntry and introEntry.progress["NPC_ElderAldric"] or 0))
+	assert_true("Progress = 1", introEntry and introEntry.progress["NPC_ElderAldric"] == 1)
+
+	-- 6e. Complete quest
+	local q4 = QuestService:CompleteQuest(player, "Q_Millhaven_Intro")
+	print(("  📊 CompleteQuest('Q_Millhaven_Intro'): %s, rewards=%s"):format(
+		tostring(q4.success), tostring(q4.rewards and q4.rewards.exp)))
+	assert_true("Intro completed", q4.success)
+	assert_eq("EXP reward = 50", q4.rewards.exp, 50)
+
+	-- 6f. Quest masuk CompletedQuests
+	data = DataService.GetProfile(player)
+	print(("  📊 CompletedQuests[Intro]: %s"):format(tostring(data.CompletedQuests["Q_Millhaven_Intro"])))
+	assert_true("Intro di CompletedQuests", data.CompletedQuests["Q_Millhaven_Intro"])
+
+	-- 6g. Accept quest yang butuh prereq (Q_Millhaven_WolfThreat perlu Intro)
+	local q5 = QuestService:AcceptQuest(player, "Q_Millhaven_WolfThreat")
+	print(("  📊 AcceptQuest('WolfThreat'): %s"):format(tostring(q5.success)))
+	assert_true("WolfThreat accepted (prereq met)", q5.success)
+
+	-- 6h. Accept quest yang butuh level lebih tinggi
+	local q6 = QuestService:AcceptQuest(player, "Q_OpenGate_Duskwood")
+	print(("  📊 AcceptQuest('OpenGate_Duskwood') Lv%d: %s (%s)"):format(
+		data.Level, tostring(q6.success), tostring(q6.reason or "OK")))
+	assert_true("OpenGate_Duskwood accepted (Lv40 >= Lv8)", q6.success)
+
+	-- 6i. Complete WolfThreat (kill 5 wolves)
+	for i = 1, 5 do
+		QuestService:ReportProgress(player, "Enemy_Wolf", 1)
+	end
+	local q7 = QuestService:CompleteQuest(player, "Q_Millhaven_WolfThreat")
+	print(("  📊 CompleteQuest('WolfThreat'): %s, exp=%d, soft=%d"):format(
+		tostring(q7.success), q7.rewards and q7.rewards.exp or 0, q7.rewards and q7.rewards.softCurrency or 0))
+	assert_true("WolfThreat completed", q7.success)
+
+	-- 6j. GetAvailableQuests
+	local avail = QuestService:GetAvailableQuests(player)
+	print(("  📊 Available quests: %d"):format(avail.available and #avail.available or 0))
+	assert_true("Has available quests", avail.success and #avail.available > 0)
+
+	-- 6k. Daily quest (repeatable)
+	local q8 = QuestService:AcceptQuest(player, "Q_Daily_WolfHunt")
+	print(("  📊 AcceptQuest('Daily_WolfHunt'): %s"):format(tostring(q8.success)))
+	assert_true("Daily accepted", q8.success)
+	for i = 1, 10 do QuestService:ReportProgress(player, "Enemy_Wolf", 1) end
+	local q9 = QuestService:CompleteQuest(player, "Q_Daily_WolfHunt")
+	print(("  📊 CompleteQuest('Daily'): %s, exp=%d"):format(
+		tostring(q9.success), q9.rewards and q9.rewards.exp or 0))
+	assert_true("Daily completed", q9.success)
+
+	print(("  📊 FINAL: Lv%d, CompletedQuests=%d"):format(
+		data.Level, (function() local c = 0; for _ in pairs(data.CompletedQuests or {}) do c += 1 end; return c end)()))
+
 	-- Final
 	print(("\n  📊 FINAL: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d, EXP=%d"):format(
 		data.Level, tostring(data.RaceId), tostring(data.ClassId),
