@@ -24,6 +24,9 @@
       },
       "Main": {
         "$path": "src/ServerScriptService/Main.server.lua"
+      },
+      "GatePortalBuilder": {
+        "$path": "src/ServerScriptService/GatePortalBuilder.server.lua"
       }
     },
     "ServerStorage": {
