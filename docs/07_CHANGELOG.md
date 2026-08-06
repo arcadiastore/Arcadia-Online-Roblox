@@ -17,6 +17,53 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] LevelCurve + LevelService (leveling, EXP, Combat Points)
+### Ditambahkan
+- `LevelCurve.lua` (`ReplicatedStorage/Configs/`): config EXP progression
+  — formula kuadratik `base + level^2 * factor`, MaxLevel 50, base stat
+  +2 per level ke semua stat, 3 Combat Points per level-up. Helper
+  functions: `GetRequiredExp(lv)`, `GetTotalExpToLevel(lv)`,
+  `GetBaseStats(lv)`, `GetCombatPointsGain(lv)`, `GetLevelFromTotalExp(exp)`.
+- `LevelService.lua` (`ServerScriptService/Services/LevelService/`):
+  service leveling & EXP — server-only API `AddExp(player, amount)` untuk
+  Service lain (CombatService, QuestService, dst.), proses level-up
+  otomatis (multiple level sekaligus jika EXP cukup), recalculate base
+  stats otomatis, award Combat Points. Remote `Level/AllocateCP`
+  (RemoteFunction, client→server): alokasi 1 CP ke stat pilihan
+  (validasi statName, cek UnspentCombatPoints > 0, 0.2s debounce).
+  Remote `Level/LevelUp` (RemoteEvent, server→client): notifikasi
+  level-up ke client (newLevel, combatPointsGained, baseStats).
+  Helper: `GetLevel`, `GetRequiredExpForNextLevel`, `GetProgressPercent`,
+  `GetUnspentPoints`.
+- Remote model `.model.json` untuk 2 remote Level: `LevelUp` (Event),
+  `AllocateCP` (Function).
+### Diubah
+- `Main.server.lua`: tambah LevelService ke service registry (urutan:
+  DataService → CharacterService → LevelService).
+- `docs/02_TDD.md` §5: tambah 2 baris remote Level ke tabel Remote.
+### Catatan Teknis / Risiko
+- **Belum dites manual di Roblox Studio** — wajib Play Solo: test AddExp
+  (gain EXP → level-up → CP naik → base stat naik), test multiple
+  level-up dalam satu AddExp call, test AllocateCP (sukses, stat tidak
+  valid, CP habis, spam), test notifikasi LevelUp ke client.
+- Base stat recalculation di `processLevelUps`: saat level-up, base stat
+  lama dikurangi dan base baru ditambahkan — ini mempertahankan ras bonus
+  & CP-allocated points yang sudah ada. Asumsi: ras bonus & CP points
+  tidak berubah saat level-up (benar — hanya base yang naik). Kalau ada
+  sistem reset stat di masa depan, perlu review logic ini.
+- `AddExp` bisa dipanggil Service lain tanpa remote — ini sengaja
+  (server-only API), client tidak bisa inject EXP. Tapi kalau ada bug
+  di CombatService/QuestService yang memanggil AddExp dengan amount salah,
+  EXP bisa naik tak terduga — semua Service pemanggil wajib validasi
+  amount sebelum panggil.
+- Level cap 50: kalau pemain sudah MaxLevel, `AddExp` tetap menambah
+  `data.Exp` (overflow EXP tercatat) tapi level tidak naik. Design
+  decision: EXP overflow tidak di-reset, bisa dipakai nanti untuk
+  prestige/sistem pasca-cap.
+- AllocateCP tidak ada cost selain UnspentCombatPoints — tidak ada
+  batasan waktu/level untuk alokasi. Bisa ditambah nanti kalau ada
+  mekanik "reset stat" berbayar (GDD §17 monetisasi).
+
 ## [2026-08-06] Service/Controller pattern, RemoteValidator, CharacterService
 ### Ditambahkan
 - `BaseService.lua` (`ServerScriptService/Services/`): pola dasar Service

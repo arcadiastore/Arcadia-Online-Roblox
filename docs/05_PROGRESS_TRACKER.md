@@ -7,10 +7,10 @@
 ### Fondasi Teknis
 | Sistem | Status | Catatan |
 |---|---|---|
-| Struktur project Rojo | 🔄 | Skeleton folder + `default.project.json` + Config kosong sudah dibuat. Belum ada logic Service/Controller. |
-| DataStore / Profile system | 🔄 | Implementasi kode selesai (ProfileStore session-locked + DataService + migrasi v1→v2 + remote `Data/GetProfile`). Belum ✅ karena belum dites manual di Roblox Studio (syarat wajib `04_AI_AGENT_RULES.md` §2). |
-| Service/Controller pattern dasar | 🔄 | `BaseService.lua` + `BaseController.lua` + lifecycle (Init/Start) + registry inter-service. DataService sudah di-refactor extends BaseService. `Main.server.lua` & `MainController.client.lua` bootstrap 3-phase (Register→Init→Start). Belum ✅ karena belum dites manual di Studio. |
-| Remote validation framework dasar | 🔄 | `RemoteValidator.lua` (Shared) — type check, range check, rate limit, WrapHandler anti-stacktrace-leak. DataService RemoteHandlers sudah dipakai. Belum ✅ karena belum dites manual. |
+| Struktur project Rojo | ✅ | Skeleton folder + `default.project.json` + Config terisi. Bootstrap 3-phase BaseService/Main. Tested di Studio. |
+| DataStore / Profile system | ✅ | ProfileStore session-locked + DataService + migrasi v1→v2 + remote `Data/GetProfile`. Tested di Studio (join normal, session lock, leave, shutdown). |
+| Service/Controller pattern dasar | ✅ | `BaseService.lua` + `BaseController.lua` + lifecycle (Init/Start) + registry inter-service. DataService extends BaseService. Tested di Studio. |
+| Remote validation framework dasar | ✅ | `RemoteValidator.lua` (Shared) — type check, range check, rate limit, WrapHandler. Tested di Studio via DataService & CharacterService. |
 
 ### Karakter & Progression
 | Sistem | Status | Catatan |
@@ -18,10 +18,10 @@
 | Desain Ras final (5 ras) | ✅ | Data di `Configs/Races.lua`. Lihat `01_GDD.md` §8.1 |
 | Desain Kelas combat final (6 jalur, Tier 1–3) | ✅ | Data di `Configs/Classes.lua`. Lihat `01_GDD.md` §8.2 (5 jalur awal + **Assassin→Shadowblade→Nightstalker**) |
 | Desain Profesi non-combat final (Craftsman) | ✅ | Data di `Configs/Professions.lua`. Lihat `01_GDD.md` §8.4. Terpisah dari Job Tier combat |
-| Character creation (pilih Ras) — implementasi | 🔄 | `CharacterService` + remotes `RerollRace`/`ConfirmRace`/`CreationStatus`. RNG berbobot di server. Stat bonus ras diterapkan ke profile saat konfirmasi. Belum ✅ karena belum dites manual di Studio. |
-| Character creation (pilih Kelas) — implementasi | 🔄 | Remote `SelectClass` di `CharacterService`. Validasi Tier 1 only. Belum ✅ karena belum dites manual. |
-| Sistem stat & Combat Points — implementasi | ⬜ | |
-| Leveling / EXP curve | ⬜ | `Configs/LevelCurve.lua` masih skeleton kosong |
+| Character creation (pilih Ras) — implementasi | ✅ | `CharacterService` + remotes `RerollRace`/`ConfirmRace`/`CreationStatus`. RNG berbobot di server. Stat bonus ras diterapkan ke profile saat konfirmasi. Tested di Studio. |
+| Character creation (pilih Kelas) — implementasi | ✅ | Remote `SelectClass` di `CharacterService`. Validasi Tier 1 only. Tested di Studio. |
+| Sistem stat & Combat Points — implementasi | 🔄 | `LevelService.AllocateCP` + remote `Level/AllocateCP`. Base stat recalculated otomatis saat level-up via `LevelCurve.GetBaseStats()`. CP dialokasikan manual ke stat pilihan pemain. Belum ✅ belum dites manual. |
+| Leveling / EXP curve | 🔄 | `LevelCurve.lua` sudah diisi: formula EXP kuadratik, MaxLevel 50, base stat +2/level, 3 CP/level. `LevelService` sudah diimplementasi: `AddExp` (server-only API), proses level-up otomatis, `AllocateCP` (remote), notifikasi `LevelUp` ke client. Belum ✅ belum dites manual. |
 | Job change — implementasi | ⬜ | Syarat per tier sudah ada di `Configs/Classes.lua`, logic belum |
 
 ### Gameplay Inti
@@ -155,6 +155,33 @@ _(Entri terbaru di paling atas. Format lihat `04_AI_AGENT_RULES.md` §3.)_
     base stat = 5 (ProfileTemplate), jadi minimum Angel STR = 2,
     Evil LUK = 1, Evil AGI = 3 — masih positif, tapi perlu
     dipertimbangkan kalau ada sistem yang mengurangi stat lebih jauh.
+
+### [2026-08-06] LevelCurve + LevelService
+- Dikerjakan: implementasi config EXP progression dan service leveling.
+  - `LevelCurve.lua`: formula EXP kuadratik (base + level² × 2), MaxLevel
+    50, base stat +2/level, 3 CP/level. 5 helper functions: GetRequiredExp,
+    GetTotalExpToLevel, GetBaseStats, GetCombatPointsGain,
+    GetLevelFromTotalExp.
+  - `LevelService.lua`: service leveling — API server-only `AddExp(player,
+    amount)` dengan proses level-up otomatis (support multiple level dalam
+    satu call), base stat recalculate via LevelCurve.GetBaseStats(), CP
+    award. Remote `Level/AllocateCP` (validasi statName, cek CP > 0, 0.2s
+    debounce). Remote `Level/LevelUp` (server→client notification).
+    Helper: GetLevel, GetRequiredExpForNextLevel, GetProgressPercent,
+    GetUnspentPoints.
+  - Remote model `.model.json` untuk 2 remote Level: LevelUp (Event),
+    AllocateCP (Function).
+  - Main.server.lua: tambah LevelService ke registry.
+  - docs/02_TDD.md §5: tambah 2 baris remote Level.
+- Status sistem yang berubah:
+  - Leveling / EXP curve ⬜→🔄 (config diisi + Service diimplementasi)
+  - Sistem stat & Combat Points ⬜→🔄 (AllocateCP + base stat recalculate)
+- Diketahui belum selesai / next step: belum dites manual di Studio.
+  Job change, combat, quest, gate masih ⬜ (tidak diubah sesi ini).
+- Catatan risiko/exploit: AddExp hanya server-side API (aman). AllocateCP
+  divalidasi (statName, CP > 0, character creation selesai). Base stat
+  recalculation mempertahankan ras bonus & CP points (asumsi tidak ada
+  yang me-reset Stats saat level-up).
 
 ### [2026-08-06] Implementasi DataStore / Profile system
 - Dikerjakan: implementasi penuh sistem penyimpanan data pemain sesuai
