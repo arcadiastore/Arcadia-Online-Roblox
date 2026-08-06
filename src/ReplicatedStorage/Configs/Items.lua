@@ -1,24 +1,437 @@
 --[[
 	Items.lua
-	Skeleton config module — belum diisi data desain final.
+	Definisi item — sumber kebenaran untuk InventoryService.
+	Lihat docs/03_DDD.md §3, docs/01_GDD.md §12.
 
-	Skema & contoh entry: lihat docs/03_DDD.md §3 (termasuk §3.1 "Konvensi
-	Aset Visual" untuk field meshId/textureId/iconId di bawah).
-	Isi tabel di bawah setelah konten terkait difinalisasi di docs/01_GDD.md.
-	JANGAN taruh angka/nama sistem ini langsung di dalam Service — semua
-	logic wajib require() modul ini (aturan anti-hardcode, docs/06_CODING_STANDARDS.md §2).
+	type:
+	  - "Weapon"    → slot = "Weapon", stats = { STR, INT, ... }
+	  - "Armor"     → slot = "Chest"/"Head"/"Legs"/"Feet", stats
+	  - "Shield"    → slot = "Shield", stats
+	  - "Accessory" → slot = "Accessory", stats
+	  - "Consumable"→ digunakan langsung, effect = { healHP, healMP, ... }
+	  - "Material"  → bahan crafting
+	  - "QuestItem" → item quest, tidak bisa di-equip/drop
 
-	Field aset visual per item (opsional untuk item non-fisik seperti currency):
-		meshId    = "rbxassetid://..." -- model 3D (MeshPart), upload manual
-		            dari Roblox Studio, hasil AI generator (Roblox Studio
-		            Cube, Meshy, Sloyd, dsb — lihat diskusi desain), atau
-		            artist. Placeholder "rbxassetid://0" kalau belum ada.
-		textureId = "rbxassetid://..." -- texture terpisah, nil kalau mesh
-		            sudah datang dengan material ter-bake.
-		iconId    = "rbxassetid://..." -- ikon 2D untuk UI (inventory/hotbar/
-		            shop), wajib diisi untuk item yang tampil di UI.
+	rarity: Common, Uncommon, Rare, Epic, Legendary
+	stackable: true = bisa di-stack (quantity), false = 1 per slot
+	maxStack: maksimum quantity per stack (default 1 untuk equipment, 99 untuk consumable/material)
 ]]
 
 return {
-	-- contoh: Id = { field = value, meshId = "rbxassetid://0", textureId = "rbxassetid://0", iconId = "rbxassetid://0" },
+	-- === WEAPONS (Tier 1) ===
+	IronSword = {
+		id = "IronSword",
+		displayName = "Iron Sword",
+		type = "Weapon",
+		rarity = "Common",
+		stackable = false,
+		maxStack = 1,
+		stats = { STR = 5 },
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = nil,  -- semua class bisa pakai
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	SteelAxe = {
+		id = "SteelAxe",
+		displayName = "Steel Axe",
+		type = "Weapon",
+		rarity = "Common",
+		stackable = false,
+		maxStack = 1,
+		stats = { STR = 7 },
+		element = nil,
+		requiredLevel = 5,
+		requiredClass = "Warrior",
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	ShadowDagger = {
+		id = "ShadowDagger",
+		displayName = "Shadow Dagger",
+		type = "Weapon",
+		rarity = "Uncommon",
+		stackable = false,
+		maxStack = 1,
+		stats = { AGI = 6, LUK = 3 },
+		element = "Dark",
+		requiredLevel = 5,
+		requiredClass = "Assassin",
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	OakStaff = {
+		id = "OakStaff",
+		displayName = "Oak Staff",
+		type = "Weapon",
+		rarity = "Common",
+		stackable = false,
+		maxStack = 1,
+		stats = { INT = 6 },
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = "Mage",
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	HuntersBow = {
+		id = "HuntersBow",
+		displayName = "Hunter's Bow",
+		type = "Weapon",
+		rarity = "Common",
+		stackable = false,
+		maxStack = 1,
+		stats = { AGI = 5, STR = 2 },
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = "Archer",
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	WoodenMace = {
+		id = "WoodenMace",
+		displayName = "Wooden Mace",
+		type = "Weapon",
+		rarity = "Common",
+		stackable = false,
+		maxStack = 1,
+		stats = { STR = 3, VIT = 2 },
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = "Defender",
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	HolySymbol = {
+		id = "HolySymbol",
+		displayName = "Holy Symbol",
+		type = "Weapon",
+		rarity = "Common",
+		stackable = false,
+		maxStack = 1,
+		stats = { INT = 4, VIT = 2 },
+		element = "Light",
+		requiredLevel = 1,
+		requiredClass = "Healer",
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	-- === WEAPONS (Tier 2) ===
+	KnightBlade = {
+		id = "KnightBlade",
+		displayName = "Knight Blade",
+		type = "Weapon",
+		rarity = "Rare",
+		stackable = false,
+		maxStack = 1,
+		stats = { STR = 15, VIT = 5 },
+		element = nil,
+		requiredLevel = 15,
+		requiredClass = "Knight",
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	ElementalOrb = {
+		id = "ElementalOrb",
+		displayName = "Elemental Orb",
+		type = "Weapon",
+		rarity = "Rare",
+		stackable = false,
+		maxStack = 1,
+		stats = { INT = 18, AGI = 3 },
+		element = "Fire",
+		requiredLevel = 15,
+		requiredClass = "Elementalist",
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	-- === ARMOR ===
+	LeatherChest = {
+		id = "LeatherChest",
+		displayName = "Leather Chest",
+		type = "Armor",
+		rarity = "Common",
+		stackable = false,
+		maxStack = 1,
+		stats = { VIT = 3 },
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = nil,
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	IronHelm = {
+		id = "IronHelm",
+		displayName = "Iron Helm",
+		type = "Armor",
+		rarity = "Common",
+		stackable = false,
+		maxStack = 1,
+		stats = { VIT = 2 },
+		element = nil,
+		requiredLevel = 3,
+		requiredClass = nil,
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	ChainLeggings = {
+		id = "ChainLeggings",
+		displayName = "Chain Leggings",
+		type = "Armor",
+		rarity = "Common",
+		stackable = false,
+		maxStack = 1,
+		stats = { VIT = 2, AGI = 1 },
+		element = nil,
+		requiredLevel = 5,
+		requiredClass = nil,
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	TravelBoots = {
+		id = "TravelBoots",
+		displayName = "Travel Boots",
+		type = "Armor",
+		rarity = "Common",
+		stackable = false,
+		maxStack = 1,
+		stats = { AGI = 2 },
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = nil,
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	WoodShield = {
+		id = "WoodShield",
+		displayName = "Wood Shield",
+		type = "Shield",
+		rarity = "Common",
+		stackable = false,
+		maxStack = 1,
+		stats = { VIT = 4 },
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = "Defender",
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	RubyRing = {
+		id = "RubyRing",
+		displayName = "Ruby Ring",
+		type = "Accessory",
+		rarity = "Uncommon",
+		stackable = false,
+		maxStack = 1,
+		stats = { STR = 3 },
+		element = "Fire",
+		requiredLevel = 5,
+		requiredClass = nil,
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	SapphireAmulet = {
+		id = "SapphireAmulet",
+		displayName = "Sapphire Amulet",
+		type = "Accessory",
+		rarity = "Uncommon",
+		stackable = false,
+		maxStack = 1,
+		stats = { INT = 3 },
+		element = "Water",
+		requiredLevel = 5,
+		requiredClass = nil,
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	-- === CONSUMABLES ===
+	HealthPotion = {
+		id = "HealthPotion",
+		displayName = "Health Potion",
+		type = "Consumable",
+		rarity = "Common",
+		stackable = true,
+		maxStack = 20,
+		stats = {},
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = nil,
+		tradable = true,
+		effect = { healHP = 50 },
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	ManaPotion = {
+		id = "ManaPotion",
+		displayName = "Mana Potion",
+		type = "Consumable",
+		rarity = "Common",
+		stackable = true,
+		maxStack = 20,
+		stats = {},
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = nil,
+		tradable = true,
+		effect = { healMP = 30 },
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	Antidote = {
+		id = "Antidote",
+		displayName = "Antidote",
+		type = "Consumable",
+		rarity = "Common",
+		stackable = true,
+		maxStack = 10,
+		stats = {},
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = nil,
+		tradable = true,
+		effect = { curePoison = true },
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	-- === MATERIALS ===
+	IronOre = {
+		id = "IronOre",
+		displayName = "Iron Ore",
+		type = "Material",
+		rarity = "Common",
+		stackable = true,
+		maxStack = 99,
+		stats = {},
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = nil,
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	Moonpetal = {
+		id = "Moonpetal",
+		displayName = "Moonpetal",
+		type = "Material",
+		rarity = "Common",
+		stackable = true,
+		maxStack = 99,
+		stats = {},
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = nil,
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	WolfFang = {
+		id = "WolfFang",
+		displayName = "Wolf Fang",
+		type = "Material",
+		rarity = "Common",
+		stackable = true,
+		maxStack = 99,
+		stats = {},
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = nil,
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	DarkEssence = {
+		id = "DarkEssence",
+		displayName = "Dark Essence",
+		type = "Material",
+		rarity = "Rare",
+		stackable = true,
+		maxStack = 50,
+		stats = {},
+		element = "Dark",
+		requiredLevel = 10,
+		requiredClass = nil,
+		tradable = true,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
+
+	-- === QUEST ITEMS ===
+	GateKey_Duskwood = {
+		id = "GateKey_Duskwood",
+		displayName = "Duskwood Gate Key",
+		type = "QuestItem",
+		rarity = "Rare",
+		stackable = false,
+		maxStack = 1,
+		stats = {},
+		element = nil,
+		requiredLevel = 1,
+		requiredClass = nil,
+		tradable = false,
+		meshId = "rbxassetid://0",
+		textureId = "rbxassetid://0",
+		iconId = "rbxassetid://0",
+	},
 }

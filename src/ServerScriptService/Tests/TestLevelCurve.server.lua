@@ -572,6 +572,130 @@ task.spawn(function()
 	print(("  📊 FINAL: Combat test complete, STR=%d, Level=%d"):format(
 		data.Stats.STR, data.Level))
 
+	-- ========================================
+	-- BAGIAN 8: InventoryService
+	-- ========================================
+	section("BAGIAN 8: InventoryService")
+
+	local InventoryService = require(ServerScriptService.Services.InventoryService)
+
+	-- Reset + setup
+	DataService.ResetToTemplate(player)
+	task.wait(0.2)
+	CharService2.RerollRace(player)
+	CharService2.ConfirmRace(player, "Human")
+	CharService2.SelectClass(player, "Warrior")
+	LevelService:AddExp(player, 2000) -- Lv~12
+	data = DataService.GetProfile(player)
+	print(("  📊 Setup: Lv%d, STR=%d"):format(data.Level, data.Stats.STR))
+
+	-- 8a. Add item
+	local add1 = InventoryService:AddItem(player, "IronSword", 1)
+	print(("  📊 AddItem('IronSword'): %s"):format(tostring(add1.success)))
+	assert_true("IronSword added", add1.success)
+
+	local add2 = InventoryService:AddItem(player, "HealthPotion", 5)
+	print(("  📊 AddItem('HealthPotion', 5): %s"):format(tostring(add2.success)))
+	assert_true("HealthPotion x5 added", add2.success)
+
+	local add3 = InventoryService:AddItem(player, "Moonpetal", 3)
+	print(("  📊 AddItem('Moonpetal', 3): %s"):format(tostring(add3.success)))
+	assert_true("Moonpetal x3 added", add3.success)
+
+	-- 8b. GetInventory
+	local inv1 = InventoryService:GetInventory(player)
+	print(("  📊 Inventory: %d items"):format(inv1.inventory and #inv1.inventory or 0))
+	assert_eq("3 item types", #inv1.inventory, 3)
+
+	-- 8c. Equip item (IronSword di index 1)
+	local eq1 = InventoryService:EquipItem(player, 1)
+	print(("  📊 EquipItem(1): %s, slot=%s, item=%s"):format(
+		tostring(eq1.success), tostring(eq1.slot), tostring(eq1.itemId)))
+	assert_true("IronSword equipped", eq1.success)
+	assert_eq("Slot = Weapon", eq1.slot, "Weapon")
+
+	-- 8d. GetEquipment
+	local equip1 = InventoryService:GetEquipment(player)
+	print(("  📊 Equipment[Weapon]: %s"):format(
+		tostring(equip1.equipment and equip1.equipment.Weapon and equip1.equipment.Weapon.itemId)))
+	assert_true("Weapon equipped", equip1.equipment and equip1.equipment.Weapon ~= nil)
+
+	-- 8e. Equipment stats
+	local eqStats = InventoryService:GetEquipmentStats(player)
+	print(("  📊 Equipment STR bonus: %d"):format(eqStats.STR or 0))
+	assert_eq("STR +5 from IronSword", eqStats.STR, 5)
+
+	-- 8f. Unequip item
+	local ueq1 = InventoryService:UnequipItem(player, "Weapon")
+	print(("  📊 UnequipItem('Weapon'): %s"):format(tostring(ueq1.success)))
+	assert_true("Weapon unequipped", ueq1.success)
+
+	local equip2 = InventoryService:GetEquipment(player)
+	assert_true("Weapon slot nil", equip2.equipment.Weapon == nil)
+
+	-- 8g. Re-equip (IronSword sekarang di index terakhir karena unequip masuk ke inventory)
+	local inv2 = InventoryService:GetInventory(player)
+	local ironIdx = nil
+	for i, entry in ipairs(inv2.inventory) do
+		if entry.itemId == "IronSword" then ironIdx = i; break end
+	end
+	print(("  📊 IronSword di index: %s"):format(tostring(ironIdx)))
+	assert_true("IronSword found in inventory", ironIdx ~= nil)
+
+	local eq2 = InventoryService:EquipItem(player, ironIdx)
+	assert_true("Re-equip IronSword", eq2.success)
+
+	-- 8h. Use consumable (HealthPotion)
+	local inv3 = InventoryService:GetInventory(player)
+	local potionIdx = nil
+	for i, entry in ipairs(inv3.inventory) do
+		if entry.itemId == "HealthPotion" then potionIdx = i; break end
+	end
+	print(("  📊 HealthPotion di index: %s"):format(tostring(potionIdx)))
+	assert_true("Potion found", potionIdx ~= nil)
+
+	local use1 = InventoryService:UseItem(player, potionIdx)
+	print(("  📊 UseItem('HealthPotion'): %s, effects=%s"):format(
+		tostring(use1.success), tostring(use1.effects and table.concat(use1.effects, ", "))))
+	assert_true("Potion used", use1.success)
+
+	-- Quantity berkurang
+	local inv4 = InventoryService:GetInventory(player)
+	local potionEntry = nil
+	for _, entry in ipairs(inv4.inventory) do
+		if entry.itemId == "HealthPotion" then potionEntry = entry; break end
+	end
+	print(("  📊 Potion remaining: %d"):format(potionEntry and potionEntry.quantity or 0))
+	assert_eq("Potion qty = 4", potionEntry and potionEntry.quantity, 4)
+
+	-- 8i. Remove item
+	local rm1 = InventoryService:RemoveItem(player, "Moonpetal", 2)
+	print(("  📊 RemoveItem('Moonpetal', 2): %s"):format(tostring(rm1.success)))
+	assert_true("Moonpetal removed x2", rm1.success)
+
+	local inv5 = InventoryService:GetInventory(player)
+	local moonEntry = nil
+	for _, entry in ipairs(inv5.inventory) do
+		if entry.itemId == "Moonpetal" then moonEntry = entry; break end
+	end
+	print(("  📊 Moonpetal remaining: %d"):format(moonEntry and moonEntry.quantity or 0))
+	assert_eq("Moonpetal qty = 1", moonEntry and moonEntry.quantity, 1)
+
+	-- 8j. Item tidak valid
+	local bad1 = InventoryService:AddItem(player, "FakeItem", 1)
+	print(("  📊 AddItem('FakeItem'): %s (%s)"):format(tostring(bad1.success), tostring(bad1.reason)))
+	assert_true("FakeItem ditolak", not bad1.success)
+
+	-- 8k. HasItem check
+	local has1 = InventoryService:HasItem(player, "HealthPotion", 1)
+	local has2 = InventoryService:HasItem(player, "HealthPotion", 99)
+	print(("  📊 HasItem('Potion', 1): %s, HasItem('Potion', 99): %s"):format(
+		tostring(has1), tostring(has2)))
+	assert_true("Has 1 potion", has1)
+	assert_true("Not has 99 potion", not has2)
+
+	print(("  📊 FINAL: Inventory test complete, Lv%d"):format(data.Level))
+
 	-- Final
 	print(("\n  📊 FINAL: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d, EXP=%d"):format(
 		data.Level, tostring(data.RaceId), tostring(data.ClassId),
