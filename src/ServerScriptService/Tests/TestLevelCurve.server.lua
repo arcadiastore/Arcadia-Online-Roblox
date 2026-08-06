@@ -284,6 +284,56 @@ task.spawn(function()
 		data.Level, tostring(data.RaceId), tostring(data.ClassId),
 		data.Stats.STR, data.UnspentCombatPoints, data.Exp))
 
+	-- ========================================
+	-- BAGIAN 4: GateService test (butuh Lv10+)
+	-- ========================================
+	section("BAGIAN 4: GateService")
+
+	local GateService = require(ServerScriptService.Services.GateService)
+
+	-- Pastikan level cukup untuk Gate_Duskwood
+	if data.Level < 10 then
+		LevelService:AddExp(player, 50000) -- naikkan ke Lv40+
+		data = DataService.GetProfile(player)
+		print(("  📊 Level-up ke Lv%d untuk gate test"):format(data.Level))
+	end
+
+	-- 4a. Gate tidak valid
+	local g1 = GateService.TryOpenGate(player, "FakeGate")
+	print(("  📊 TryOpenGate('FakeGate'): %s (%s)"):format(tostring(g1.success), tostring(g1.reason)))
+	assert_true("FakeGate ditolak", not g1.success)
+
+	-- 4b. Gate dengan syarat level terpenuhi (Duskwood perlu Lv10)
+	local g2 = GateService.TryOpenGate(player, "Gate_Duskwood")
+	print(("  📊 TryOpenGate('Gate_Duskwood'): %s, dest=%s"):format(
+		tostring(g2.success), tostring(g2.destination)))
+	assert_true("Gate_Duskwood sukses", g2.success)
+	assert_eq("Dest = DuskwoodForest", g2.destination, "DuskwoodForest")
+
+	-- 4c. Gate sudah terbuka (idempotent)
+	local g3 = GateService.TryOpenGate(player, "Gate_Duskwood")
+	print(("  📊 TryOpenGate lagi: %s, alreadyUnlocked=%s"):format(
+		tostring(g3.success), tostring(g3.alreadyUnlocked)))
+	assert_true("Already unlocked", g3.alreadyUnlocked)
+
+	-- 4d. Gate dengan syarat quest (belum punya quest → ditolak)
+	local g4 = GateService.TryOpenGate(player, "Gate_Frostpeak")
+	print(("  📊 TryOpenGate('Gate_Frostpeak'): %s (%s)"):format(
+		tostring(g4.success), tostring(g4.reason)))
+	assert_true("Frostpeak ditolak (no quest)", not g4.success)
+
+	-- 4e. GetUnlockedGates
+	local unlocked = GateService.GetUnlockedGates(player)
+	print(("  📊 Unlocked gates: %d"):format(unlocked and (function() local c = 0; for _ in pairs(unlocked) do c += 1 end; return c end)() or 0))
+	assert_true("Duskwood unlocked", unlocked and unlocked.Gate_Duskwood)
+
+	-- 4f. IsGateUnlocked
+	assert_true("IsGateUnlocked Duskwood", GateService.IsGateUnlocked(player, "Gate_Duskwood"))
+	assert_true("IsGateUnlocked Frostpeak = false", not GateService.IsGateUnlocked(player, "Gate_Frostpeak"))
+
+	print(("  📊 FINAL: Lv%d, UnlockedGates: Duskwood=%s"):format(
+		data.Level, tostring(unlocked.Gate_Duskwood ~= nil)))
+
 	-- ============================================================
 	-- SUMMARY
 	-- ============================================================
