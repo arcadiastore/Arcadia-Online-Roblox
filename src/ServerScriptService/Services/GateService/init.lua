@@ -25,7 +25,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local BaseService = require(script.Parent.Parent:WaitForChild("Services"):WaitForChild("BaseService"))
 local GatesConfig = require(ReplicatedStorage.Configs.Gates)
-local RemoteValidator = require(ReplicatedStorage.Shared.RemoteValidator)
+local RemoteValidator = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("RemoteValidator"))
 
 local GateService = BaseService:Extend("GateService")
 
