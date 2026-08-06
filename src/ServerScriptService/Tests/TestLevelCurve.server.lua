@@ -444,6 +444,127 @@ task.spawn(function()
 	print(("  📊 FINAL: Lv%d, CompletedQuests=%d"):format(
 		data.Level, (function() local c = 0; for _ in pairs(data.CompletedQuests or {}) do c += 1 end; return c end)()))
 
+	-- ========================================
+	-- BAGIAN 7: CombatService
+	-- ========================================
+	section("BAGIAN 7: CombatService")
+
+	local CombatService = require(ServerScriptService.Services.CombatService)
+	local DamageFormula = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("DamageFormula"))
+
+	-- 7a. Test DamageFormula (pure function)
+	local testResult = DamageFormula.Calculate(
+		{ STR = 20, INT = 10, LUK = 10, Level = 10 },
+		{ baseDamage = 15, damageType = "Physical", element = nil },
+		{ defense = 10, element = nil },
+		1.0
+	)
+	print(("  📊 DamageFormula(STR=20, base=15, def=10): dmg=%d, crit=%s"):format(
+		testResult.damage, tostring(testResult.isCrit)))
+	assert_true("Damage > 0", testResult.damage > 0)
+
+	-- 7b. Element multiplier test
+	local fireVsWind = DamageFormula.CalcElementMultiplier("Fire", "Wind")
+	local fireVsWater = DamageFormula.CalcElementMultiplier("Fire", "Water")
+	print(("  📊 Fire→Wind: %.1fx, Fire→Water: %.1fx"):format(fireVsWind, fireVsWater))
+	assert_eq("Fire strong vs Wind", fireVsWind, 1.5)
+	assert_eq("Fire weak vs Water", fireVsWater, 0.5)
+
+	-- 7c. Defense reduction test
+	local defReduction = DamageFormula.CalcDefenseReduction(100)
+	print(("  📊 Defense 100 → reduction: %.2f"):format(defReduction))
+	assert_eq("100 def = 50% reduction", defReduction, 0.5)
+
+	-- 7d. Spawn enemy
+	local wolfId = CombatService:SpawnEnemy("Enemy_Wolf")
+	print(("  📊 SpawnEnemy('Enemy_Wolf'): id=%s"):format(wolfId))
+	assert_true("Wolf spawned", wolfId ~= "")
+
+	local wolfStatus = CombatService:GetEnemyStatus(wolfId)
+	print(("  📊 Wolf HP: %d/%d, alive=%s"):format(
+		wolfStatus.currentHP, wolfStatus.maxHP, tostring(wolfStatus.alive)))
+	assert_eq("Wolf HP = 40", wolfStatus.currentHP, 40)
+
+	-- 7e. Setup player untuk combat
+	DataService.ResetToTemplate(player)
+	task.wait(0.2)
+	CharService2.RerollRace(player)
+	CharService2.ConfirmRace(player, "Human")
+	CharService2.SelectClass(player, "Warrior")
+	LevelService:AddExp(player, 1000) -- Lv~7
+	CombatService:SetPlayerMana(player, 100)
+	data = DataService.GetProfile(player)
+	print(("  📊 Combat setup: %s %s Lv%d, STR=%d"):format(
+		data.RaceId, data.ClassId, data.Level, data.Stats.STR))
+
+	-- 7f. Attack wolf dengan SlashCombo
+	local atk1 = CombatService:ProcessAttack(player, wolfId, "SlashCombo")
+	print(("  📊 SlashCombo → dmg=%d, crit=%s, enemyHP=%d/%d"):format(
+		atk1.damage, tostring(atk1.isCrit), atk1.enemyHP, atk1.enemyMaxHP))
+	assert_true("Damage > 0", atk1.damage > 0)
+	assert_true("Wolf masih hidup", atk1.enemyHP > 0)
+
+	-- 7g. Skill tidak valid
+	local atk2 = CombatService:ProcessAttack(player, wolfId, "FakeSkill")
+	print(("  📊 FakeSkill: %s (%s)"):format(tostring(atk2.success), tostring(atk2.reason)))
+	assert_true("FakeSkill ditolak", not atk2.success)
+
+	-- 7h. Serang wolf sampai mati
+	local killResult
+	for i = 1, 20 do
+		local r = CombatService:ProcessAttack(player, wolfId, "SlashCombo")
+		if r.killed then
+			killResult = r
+			break
+		end
+	end
+	print(("  📊 Wolf killed: %s, exp=%d, currency=%d"):format(
+		tostring(killResult and killResult.killed),
+		killResult and killResult.expReward or 0,
+		killResult and killResult.currencyReward or 0))
+	assert_true("Wolf mati", killResult and killResult.killed)
+
+	-- 7i. Enemy sudah mati → tidak bisa serang lagi
+	local atkDead = CombatService:ProcessAttack(player, wolfId, "SlashCombo")
+	print(("  📊 Serang wolf mati: %s (%s)"):format(tostring(atkDead.success), tostring(atkDead.reason)))
+	assert_true("Dead wolf → tolak", not atkDead.success)
+
+	-- 7j. GetAvailableSkills (Warrior Lv7)
+	local skills = CombatService:GetAvailableSkills(player)
+	print(("  📊 Available skills (Warrior Lv%d): %d"):format(
+		data.Level, skills.skills and #skills.skills or 0))
+	assert_true("Has skills", skills.success and #skills.skills > 0)
+	local hasSlash = false
+	for _, s in ipairs(skills.skills) do
+		if s.id == "SlashCombo" then hasSlash = true end
+	end
+	assert_true("Has SlashCombo", hasSlash)
+
+	-- 7k. Mana test — cast sampai mana habis
+	CombatService:SetPlayerMana(player, 10)
+	local wolfId2 = CombatService:SpawnEnemy("Enemy_Wolf")
+	local atkMana = CombatService:ProcessAttack(player, wolfId2, "SlashCombo")
+	-- SlashCombo costs 5 mana, 10 - 5 = 5 left, then 5 - 5 = 0, then 0 < 5 → fail
+	print(("  📊 SlashCombo (10 mana, cost 5): %s, mana left check"):format(
+		tostring(atkMana.success)))
+	assert_true("SlashCombo OK (10 mana >= 5 cost)", atkMana.success)
+
+	local atkNoMana = CombatService:ProcessAttack(player, wolfId2, "WarCry")
+	print(("  📊 WarCry (0 mana, cost 15): %s (%s)"):format(
+		tostring(atkNoMana.success), tostring(atkNoMana.reason)))
+	-- Mana sekarang 5, WarCry costs 15 → gagal
+	assert_true("WarCry ditolak (mana habis)", not atkNoMana.success)
+
+	-- 7l. Respawn enemy
+	CombatService:ResetEnemy(wolfId)
+	local wolfReset = CombatService:GetEnemyStatus(wolfId)
+	print(("  📊 Wolf respawn: HP=%d/%d, alive=%s"):format(
+		wolfReset.currentHP, wolfReset.maxHP, tostring(wolfReset.alive)))
+	assert_true("Wolf respawned", wolfReset.alive and wolfReset.currentHP == 40)
+
+	print(("  📊 FINAL: Combat test complete, STR=%d, Level=%d"):format(
+		data.Stats.STR, data.Level))
+
 	-- Final
 	print(("\n  📊 FINAL: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d, EXP=%d"):format(
 		data.Level, tostring(data.RaceId), tostring(data.ClassId),
