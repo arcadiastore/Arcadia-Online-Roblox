@@ -541,23 +541,23 @@ task.spawn(function()
 	end
 	assert_true("Has SlashCombo", hasSlash)
 
-	-- 7k. Mana test — tunggu cooldown expired dulu
+	-- 7k. Mana test — tunggu cooldown expired, pakai GateGuardian (200 HP)
 	task.wait(2)
 	CombatService:SetPlayerMana(player, 30)
-	local wolfId2 = CombatService:SpawnEnemy("Enemy_Wolf")
+	local guardianId = CombatService:SpawnEnemy("Enemy_GateGuardian")
 	-- WarCry cost 15, SlashCombo cost 5. Total 20 < 30 → OK
-	local atkWC = CombatService:ProcessAttack(player, wolfId2, "WarCry")
+	local atkWC = CombatService:ProcessAttack(player, guardianId, "WarCry")
 	print(("  📊 WarCry (30 mana, cost 15): %s, reason=%s"):format(
 		tostring(atkWC.success), tostring(atkWC.reason or "none")))
 	assert_true("WarCry OK", atkWC.success)
 
-	local atkSC = CombatService:ProcessAttack(player, wolfId2, "SlashCombo")
+	local atkSC = CombatService:ProcessAttack(player, guardianId, "SlashCombo")
 	print(("  📊 SlashCombo (15 mana, cost 5): %s, reason=%s"):format(
 		tostring(atkSC.success), tostring(atkSC.reason or "none")))
 	assert_true("SlashCombo OK", atkSC.success)
 
 	-- Mana = 10, WarCry cost 15 → gagal
-	local atkNoMana = CombatService:ProcessAttack(player, wolfId2, "WarCry")
+	local atkNoMana = CombatService:ProcessAttack(player, guardianId, "WarCry")
 	print(("  📊 WarCry (10 mana, cost 15): %s (%s)"):format(
 		tostring(atkNoMana.success), tostring(atkNoMana.reason)))
 	assert_true("WarCry ditolak (mana kurang)", not atkNoMana.success)
