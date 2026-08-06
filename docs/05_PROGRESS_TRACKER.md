@@ -39,7 +39,7 @@
 ### Sosial & Ekonomi
 | Sistem | Status | Catatan |
 |---|---|---|
-| Party system | ⬜ | |
+| Party system | ✅ | `PartyService.lua`: CreateParty, InvitePlayer, AcceptInvite, LeaveParty, KickPlayer, GetPartyInfo, AreInSameParty, GetPartyMembers. MAX=4, invite 60s expiry, auto-leave disconnect. Remote 6 endpoint. Tested 134/134. |
 | Shop / currency | ⬜ | |
 | Inventory & equipment | ✅ | `InventoryService.lua`: AddItem, RemoveItem, EquipItem, UnequipItem, UseItem, GetInventory, GetEquipment, GetEquipmentStats, HasItem. `Items.lua`: 27 item (weapon/armor/shield/accessory/consumable/material/quest). Remote 4 endpoint. Tested 122/122. |
 

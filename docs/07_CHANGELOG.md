@@ -17,6 +17,18 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] PartyService — tested ✅
+### Ditambahkan
+- `PartyService/init.lua` (ServerScriptService/Services): server-authoritative
+  party system. API: `CreateParty`, `InvitePlayer`, `AcceptInvite`, `LeaveParty`,
+  `KickPlayer`, `GetPartyInfo`, `AreInSameParty`, `GetPartyMembers`.
+  MAX_PARTY_SIZE=4, invite expiry 60s, auto-leave on disconnect.
+  `PartyId` field di ProfileTemplate.
+- Remote model: `Party/Create`, `Party/Invite`, `Party/Accept`, `Party/Leave`,
+  `Party/Kick`, `Party/GetInfo`.
+
+---
+
 ## [2026-08-06] InventoryService + Items — tested ✅
 ### Ditambahkan
 - `InventoryService/init.lua` (ServerScriptService/Services): server-authoritative
