@@ -18,7 +18,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseService = require(script.Parent:WaitForChild("BaseService"))
-local RemoteValidator = require(ReplicatedStorage:WaitForChild("RemoteValidator"))
+local RemoteValidator = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("RemoteValidator"))
 local ClassesConfig = require(ReplicatedStorage:WaitForChild("Configs"):WaitForChild("Classes"))
 
 local DATA_SERVICE_NAME = "DataService"
