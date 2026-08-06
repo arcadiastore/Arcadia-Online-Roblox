@@ -230,14 +230,14 @@ task.spawn(function()
 	assert_true("UnspentPoints > 0 setelah level-up", unspent > 0)
 
 	-- Test 5: AllocateCP
-	local allocResult = LevelService:AllocateCP(player, "STR")
+	local allocResult = LevelService.AllocateCP(LevelService, player, "STR")
 	print(("  📊 AllocateCP('STR'): success=%s, unspent=%s"):format(
 		tostring(allocResult.success), tostring(allocResult.unspentPoints)))
 	assert_true("AllocateCP STR berhasil", allocResult.success)
 	assert_eq("UnspentPoints berkurang", allocResult.unspentPoints, unspent - 1)
 
 	-- Test 6: AllocateCP stat tidak valid
-	local badAlloc = LevelService:AllocateCP(player, "INVALID")
+	local badAlloc = LevelService.AllocateCP(LevelService, player, "INVALID")
 	assert_true("AllocateCP INVALID ditolak", not badAlloc.success)
 
 	print("\n🎉 SEMUA TEST LevelService LULUS!")
