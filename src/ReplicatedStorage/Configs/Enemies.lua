@@ -165,4 +165,47 @@ return {
 		softCurrencyReward = 120,
 		dropTableId = "Loot_ArcaneConstruct",
 	},
+
+	-- === DUNGEON BOSSES ===
+	Enemy_DungeonBoss_CryptLord = {
+		id = "Enemy_DungeonBoss_CryptLord",
+		displayName = "Crypt Lord",
+		level = 30,
+		zone = "DuskwoodForest",
+		element = "Dark",
+		stats = { HP = 3000, STR = 50, VIT = 45, INT = 30, AGI = 25, LUK = 20 },
+		defense = 35,
+		expReward = 500,
+		softCurrencyReward = 150,
+		dropTableId = "Loot_CryptLord",
+		isBoss = true,
+	},
+
+	Enemy_DungeonBoss_FrostWyrm = {
+		id = "Enemy_DungeonBoss_FrostWyrm",
+		displayName = "Frost Wyrm",
+		level = 35,
+		zone = "FrostpeakMountains",
+		element = "Water",
+		stats = { HP = 4500, STR = 60, VIT = 55, INT = 40, AGI = 20, LUK = 25 },
+		defense = 45,
+		expReward = 800,
+		softCurrencyReward = 250,
+		dropTableId = "Loot_FrostWyrm",
+		isBoss = true,
+	},
+
+	Enemy_DungeonBoss_CorruptedTreant = {
+		id = "Enemy_DungeonBoss_CorruptedTreant",
+		displayName = "Corrupted Treant",
+		level = 20,
+		zone = "DuskwoodForest",
+		element = "Dark",
+		stats = { HP = 1800, STR = 35, VIT = 40, INT = 20, AGI = 10, LUK = 15 },
+		defense = 25,
+		expReward = 300,
+		softCurrencyReward = 80,
+		dropTableId = "Loot_CorruptedTreant",
+		isBoss = true,
+	},
 }

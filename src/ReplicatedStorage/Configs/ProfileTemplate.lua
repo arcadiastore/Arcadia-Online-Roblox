@@ -34,6 +34,7 @@ return {
 	Equipment = {},
 	QuestLog = {},
 	CompletedQuests = {}, -- [questId] = true — dipakai GateService cek syarat gate
+	DungeonId = nil,
 	PartyId = nil,
 	UnlockedGates = {},
 	Achievements = {},

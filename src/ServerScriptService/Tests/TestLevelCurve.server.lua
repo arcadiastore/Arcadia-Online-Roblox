@@ -763,6 +763,81 @@ task.spawn(function()
 
 	print(("  📊 FINAL: Party test complete"))
 
+	-- ========================================
+	-- BAGIAN 10: DungeonService
+	-- ========================================
+	section("BAGIAN 10: DungeonService")
+
+	local DungeonService = require(ServerScriptService.Services.DungeonService)
+
+	-- Setup: Buat character
+	DataService.ResetToTemplate(player)
+	task.wait(0.2)
+	CharService2.RerollRace(player)
+	CharService2.ConfirmRace(player, "Human")
+	CharService2.SelectClass(player, "Warrior")
+	data = DataService.GetProfile(player)
+
+	-- 10a. EnterDungeon tanpa party → tolak
+	local d1 = DungeonService:EnterDungeon(player, "Dungeon_SunkenCrypt")
+	print(("  📊 EnterDungeon (no party): %s (%s)"):format(tostring(d1.success), tostring(d1.reason)))
+	assert_true("No party → tolak", not d1.success)
+
+	-- 10b. Create party
+	PartyService:CreateParty(player)
+	task.wait(0.1)
+
+	-- 10c. EnterDungeon level kurang (Dungeon_SunkenCrypt butuh Lv25)
+	local d2 = DungeonService:EnterDungeon(player, "Dungeon_SunkenCrypt")
+	print(("  📊 EnterDungeon Lv10 (need 25): %s (%s)"):format(tostring(d2.success), tostring(d2.reason)))
+	assert_true("Level kurang → tolak", not d2.success)
+
+	-- 10d. EnterDungeon solo-friendly (CorruptedGrove butuh Lv15, partySize 1)
+	-- Tapi kita level 10... masih kurang
+	local d3 = DungeonService:EnterDungeon(player, "Dungeon_CorruptedGrove")
+	print(("  📊 EnterDungeon Lv10 (need 15): %s (%s)"):format(tostring(d3.success), tostring(d3.reason)))
+	assert_true("Level kurang → tolak", not d3.success)
+
+	-- 10e. Level up ke Lv15 untuk CorruptedGrove
+	for i = 1, 15 do
+		LevelService:AddExp(player, LevelCurve.CalculateRequiredExp(i))
+	end
+	task.wait(0.1)
+	data = DataService.GetProfile(player)
+	print(("  📊 Level upped to: %d"):format(data.Level))
+
+	-- 10f. EnterDungeon CorruptedGrove (Lv15, partySize 1)
+	local d4 = DungeonService:EnterDungeon(player, "Dungeon_CorruptedGrove")
+	print(("  📊 EnterDungeon CorruptedGrove: %s, wave=%d/%d, name=%s"):format(
+		tostring(d4.success), d4.wave or 0, d4.totalWaves or 0, tostring(d4.dungeonName)))
+	assert_true("Dungeon entered", d4.success)
+	assert_eq("Wave 1", d4.wave, 1)
+
+	-- 10g. GetStatus
+	local d5 = DungeonService:GetStatus(player)
+	print(("  📊 GetStatus: inDungeon=%s, wave=%d, status=%s, aliveEnemies=%d"):format(
+		tostring(d5.inDungeon), d5.wave or 0, tostring(d5.status), d5.aliveEnemies or 0))
+	assert_true("In dungeon", d5.inDungeon)
+	assert_eq("Wave 1", d5.wave, 1)
+	assert_eq("Status active", d5.status, "active")
+
+	-- 10h. DungeonId di profile
+	data = DataService.GetProfile(player)
+	print(("  📊 Profile.DungeonId: %s"):format(tostring(data.DungeonId)))
+	assert_true("DungeonId set", data.DungeonId ~= nil)
+
+	-- 10i. EnterDungeon lagi (sudah di dungeon) → tolak
+	local d6 = DungeonService:EnterDungeon(player, "Dungeon_CorruptedGrove")
+	print(("  📊 EnterDungeon lagi: %s (%s)"):format(tostring(d6.success), tostring(d6.reason)))
+	assert_true("Sudah di dungeon → tolak", not d6.success)
+
+	-- 10j. ForceLeave
+	DungeonService:ForceLeave(player)
+	task.wait(0.1)
+	data = DataService.GetProfile(player)
+	print(("  📊 ForceLeave → DungeonId: %s"):format(tostring(data.DungeonId)))
+	assert_true("DungeonId cleared", data.DungeonId == nil)
+
 	-- Final
 	print(("\n  📊 FINAL: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d, EXP=%d"):format(
 		data.Level, tostring(data.RaceId), tostring(data.ClassId),
