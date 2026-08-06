@@ -279,6 +279,73 @@ task.spawn(function()
 		tostring(a2.success), tostring(a2.reason)))
 	assert_true("INVALID ditolak", not a2.success)
 
+	-- ========================================
+	-- BAGIAN 5: JobChangeService
+	-- ========================================
+	section("BAGIAN 5: JobChangeService")
+
+	local JobChangeService = require(ServerScriptService.Services.JobChangeService)
+
+	-- 5a. Job change tanpa class (reset profile dulu)
+	DataService.ResetToTemplate(player)
+	DataService:ForceRefresh(player)
+	data = DataService.GetProfile(player)
+
+	local j1 = JobChangeService.TryJobChange(player)
+	print(("  📊 TryJobChange tanpa class: %s (%s)"):format(tostring(j1.success), tostring(j1.reason)))
+	assert_true("No class → tolak", not j1.success)
+
+	-- 5b. Setup: pilih class Warrior (Tier 1), level up
+	local CharService2 = require(ServerScriptService.Services.CharacterService)
+	CharService2.RerollRace(player)
+	CharService2.ConfirmRace(player, "Human")
+	CharService2.SelectClass(player, "Warrior")
+	LevelService:AddExp(player, 100000) -- naikkan ke Lv45
+	data = DataService.GetProfile(player)
+	print(("  📊 Setup: %s %s Lv%d, Tier=%d"):format(
+		data.RaceId, data.ClassId, data.Level, data.ClassTier or 1))
+
+	-- 5c. Warrior→Knight (Level15, quest required)
+	local j2 = JobChangeService.TryJobChange(player)
+	print(("  📊 Warrior→Knight tanpa quest: %s (%s)"):format(tostring(j2.success), tostring(j2.reason)))
+	assert_true("Quest belum → tolak", not j2.success)
+
+	-- 5d. Tambah quest, coba lagi
+	if not data.CompletedQuests then data.CompletedQuests = {} end
+	data.CompletedQuests["Q_JobChange_Knight"] = true
+	local j3 = JobChangeService.TryJobChange(player)
+	print(("  📊 Warrior→Knight + quest: %s, newClass=%s, tier=%d"):format(
+		tostring(j3.success), tostring(j3.newClassId), j3.newTier or 0))
+	assert_true("Knight sukses", j3.success)
+	assert_eq("Class = Knight", j3.newClassId, "Knight")
+	assert_eq("Tier = 2", j3.newTier, 2)
+
+	-- 5e. Knight→Warlord (Level40, quest required)
+	local j4 = JobChangeService.TryJobChange(player)
+	print(("  📊 Knight→Warlord tanpa quest: %s (%s)"):format(tostring(j4.success), tostring(j4.reason)))
+	assert_true("Warlord quest belum → tolak", not j4.success)
+
+	-- 5f. Tambah quest, coba lagi
+	data.CompletedQuests["Q_JobChange_Warlord"] = true
+	local j5 = JobChangeService.TryJobChange(player)
+	print(("  📊 Knight→Warlord + quest: %s, newClass=%s, tier=%d"):format(
+		tostring(j5.success), tostring(j5.newClassId), j5.newTier or 0))
+	assert_true("Warlord sukses", j5.success)
+	assert_eq("Class = Warlord", j5.newClassId, "Warlord")
+	assert_eq("Tier = 3", j5.newTier, 3)
+
+	-- 5g. Warlord = tier max, tidak bisa naik lagi
+	local j6 = JobChangeService.TryJobChange(player)
+	print(("  📊 Warlord→lagi: %s (%s)"):format(tostring(j6.success), tostring(j6.reason)))
+	assert_true("Tier max → tolak", not j6.success)
+	assert_eq("Tier = 3", j6.tier, 3)
+
+	-- 5h. Cek final data
+	data = DataService.GetProfile(player)
+	print(("  📊 FINAL: ClassId=%s, ClassTier=%d"):format(data.ClassId, data.ClassTier))
+	assert_eq("ClassId = Warlord", data.ClassId, "Warlord")
+	assert_eq("ClassTier = 3", data.ClassTier, 3)
+
 	-- Final
 	print(("\n  📊 FINAL: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d, EXP=%d"):format(
 		data.Level, tostring(data.RaceId), tostring(data.ClassId),

@@ -24,6 +24,7 @@ return {
 	Exp = 0,
 	RaceId = nil,
 	ClassId = nil,
+	ClassTier = 1,
 	ProfessionId = nil,
 	ProfessionExp = 0,
 	Stats = { STR = 5, VIT = 5, INT = 5, AGI = 5, LUK = 5 },

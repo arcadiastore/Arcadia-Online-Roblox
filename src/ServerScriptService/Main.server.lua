@@ -20,12 +20,14 @@ local DataService = require(ServicesFolder:WaitForChild("DataService"))
 local CharacterService = require(ServicesFolder:WaitForChild("CharacterService"))
 local LevelService = require(ServicesFolder:WaitForChild("LevelService"))
 local GateService = require(ServicesFolder:WaitForChild("GateService"))
+local JobChangeService = require(ServicesFolder:WaitForChild("JobChangeService"))
 
 local services = {
 	DataService,
 	CharacterService,
 	LevelService,
 	GateService,
+	JobChangeService,
 }
 
 -- === Phase 1: Register semua Service ===

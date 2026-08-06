@@ -1,59 +1,71 @@
 --[[
 	GateController.lua
 	Client-side controller untuk Gate/Portal system.
-	Mendeteksi ProximityPrompt di portal, menampilkan UI konfirmasi,
-	dan mengirim request ke server.
+	Listen ProximityPrompt di setiap portal → tampilkan GateConfirm UI →
+	kalau player confirm, invoke Gate/RequestOpen remote.
 
-	Alur:
-	  1. Start() → scan semua portal di workspace (atau tunggu child baru)
-	  2. Saat ProximityPrompt.Triggered → tampilkan GateConfirmUI
-	  3. Player confirm → InvokeServer("Gate/RequestOpen", gateId)
-	  4. Sukses → teleport visual feedback
-	  5. Gagal → tampilkan reason dari server
+	Anti-cheat: semua validasi syarat di server. Client hanya trigger UI.
 ]]
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StarterGui = game:GetService("StarterGui")
 
 local ControllersFolder = script.Parent
 local BaseController = require(ControllersFolder:WaitForChild("BaseController"))
-local GatesConfig = require(ReplicatedStorage.Configs.Gates)
 
 local GateController = BaseController:Extend("GateController")
-
--- Cari gateId dari nama folder portal "Portal_GateId"
-local function gateIdFromFolder(folder)
-	local name = folder.Name -- "Portal_Gate_Duskwood"
-	if name:sub(1, 7) == "Portal_" then
-		return name:sub(8)
-	end
-	return nil
-end
 
 function GateController:Init()
 	BaseController.Init(self)
 
 	local remotesFolder = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Gate")
-	self._remotes = {
-		RequestOpen = remotesFolder:WaitForChild("RequestOpen"),
-	}
+	self._requestOpen = remotesFolder:WaitForChild("RequestOpen")
 
-	local GateConfirmUI = require(StarterGui:WaitForChild("UI"):WaitForChild("GateConfirm"))
-	self._ui = GateConfirmUI.new()
-	self._activeGateId = nil
+	local GateConfirmUI = require(ReplicatedStorage:WaitForChild("Configs").Parent
+		:WaitForChild("StarterGui") and nil or nil) -- placeholder, load below
+
+	-- Load UI module from StarterGui
+	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+	local uiFolder = playerGui:WaitForChild("UI", 10)
+	if uiFolder then
+		local confirmModule = uiFolder:FindFirstChild("GateConfirm")
+		if confirmModule then
+			self._confirmUI = require(confirmModule).new()
+		end
+	end
+
+	-- If UI not found in PlayerGui, try loading from StarterGui
+	if not self._confirmUI then
+		local StarterGui = game:GetService("StarterGui")
+		local sgUi = StarterGui:WaitForChild("UI", 10)
+		if sgUi then
+			local confirmModule = sgUi:FindFirstChild("GateConfirm")
+			if confirmModule then
+				self._confirmUI = require(confirmModule).new()
+			end
+		end
+	end
+
+	-- Store pending gateId for confirm flow
+	self._pendingGateId = nil
 end
 
 function GateController:Start()
 	BaseController.Start(self)
 
-	-- Wire up confirm/cancel events
-	self._ui.Confirmed.Event:Connect(function(gateId)
-		self:_requestOpen(gateId)
-	end)
+	-- Wire up confirm UI events
+	if self._confirmUI then
+		self._confirmUI.Confirmed.Event:Connect(function(gateId)
+			self:_onConfirm(gateId)
+		end)
+		self._confirmUI.Cancelled.Event:Connect(function(gateId)
+			-- Do nothing, UI already hidden
+		end)
+	end
 
-	-- Scan existing portals + listen for new ones
-	self:_scanPortals()
+	-- Listen for ProximityPrompt triggers on portal bases
+	-- We use workspace.DescendantAdded for dynamically spawned portals
+	self:_wireExistingPrompts()
 	workspace.DescendantAdded:Connect(function(desc)
 		if desc:IsA("ProximityPrompt") and desc.Name == "GatePrompt" then
 			self:_wirePrompt(desc)
@@ -61,13 +73,16 @@ function GateController:Start()
 	end)
 end
 
-function GateController:_scanPortals()
-	for _, folder in ipairs(workspace:GetChildren()) do
-		if folder:IsA("Folder") and folder.Name:sub(1, 7) == "Portal_" then
-			for _, desc in ipairs(folder:GetDescendants()) do
-				if desc:IsA("ProximityPrompt") and desc.Name == "GatePrompt" then
-					self:_wirePrompt(desc)
-				end
+function GateController:_wireExistingPrompts()
+	local portalsFolder = workspace:FindFirstChild("GatePortals")
+	if not portalsFolder then return end
+
+	for _, portalFolder in ipairs(portalsFolder:GetChildren()) do
+		local base = portalFolder:FindFirstChild("Base")
+		if base then
+			local prompt = base:FindFirstChild("GatePrompt")
+			if prompt then
+				self:_wirePrompt(prompt)
 			end
 		end
 	end
@@ -77,88 +92,50 @@ function GateController:_wirePrompt(prompt)
 	prompt.Triggered:Connect(function(player)
 		if player ~= Players.LocalPlayer then return end
 
-		-- Cari gateId dari parent folder
-		local parent = prompt.Parent
-		while parent and parent ~= workspace do
-			local gateId = gateIdFromFolder(parent)
-			if gateId then
-				self:_showConfirm(gateId)
-				return
-			end
-			parent = parent.Parent
-		end
+		-- Extract gateId from portal folder name: "Portal_Gate_Duskwood" → "Gate_Duskwood"
+		local base = prompt.Parent
+		local folder = base and base.Parent
+		if not folder then return end
+
+		local gateId = folder.Name:gsub("^Portal_", "")
+		self:_showConfirm(gateId)
 	end)
 end
 
 function GateController:_showConfirm(gateId)
-	if self._activeGateId then return end -- sudah ada dialog aktif
-	self._activeGateId = gateId
+	if not self._confirmUI then
+		warn("[GateController] GateConfirmUI not loaded")
+		return
+	end
 
-	local player = Players.LocalPlayer
-	local playerGui = player:WaitForChild("PlayerGui")
-	self._ui:Show(playerGui, gateId)
-
-	-- Auto-cancel setelah 15 detik kalau tidak ada aksi
-	task.delay(15, function()
-		if self._activeGateId == gateId then
-			self._ui:Hide()
-			self._activeGateId = nil
-		end
-	end)
-
-	-- Reset active saat cancel
-	self._ui.Cancelled.Event:Connect(function(cancelledId)
-		if cancelledId == gateId then
-			self._activeGateId = nil
-		end
-	end)
+	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+	self._pendingGateId = gateId
+	self._confirmUI:Show(playerGui, gateId)
 end
 
-function GateController:_requestOpen(gateId)
+function GateController:_onConfirm(gateId)
 	local ok, result = pcall(function()
-		return self._remotes.RequestOpen:InvokeServer(gateId)
+		return self._requestOpen:InvokeServer(gateId)
 	end)
 
-	if ok and result and result.success then
-		self._activeGateId = nil
-		-- TODO: play teleport effect (fade to white/portal color, lalu teleport)
-		-- Untuk sekarang, langsung teleport via MoveTo
-		self:_teleportToZone(result.destination, gateId)
-	elseif ok and result then
-		-- Tampilkan reason gagal
-		self:_showConfirm(gateId) -- re-show dengan status error
-		warn("[Gate] Gagal:", result.reason)
-		-- TODO: tampilkan error di UI
-	else
-		warn("[Gate] Remote error:", tostring(result))
-		self._activeGateId = nil
+	if not ok then
+		warn("[GateController] RequestOpen error:", result)
+		return
 	end
-end
 
-function GateController:_teleportToZone(destination, gateId)
-	-- Untuk MVP: teleport ke SpawnLocation yang sesuai dengan nama zona
-	-- Di production, ini akan pakai Reserved Server / TeleportService
-	local player = Players.LocalPlayer
-	local character = player.Character
-	if not character then return end
-
-	local hrp = character:FindFirstChild("HumanoidRootPart")
-	if not hrp then return end
-
-	-- Cari spawn point di workspace (untuk single-place MVP)
-	local spawnPoint = workspace:FindFirstChild("Spawn_" .. destination)
-	if spawnPoint and spawnPoint:IsA("BasePart") then
-		hrp.CFrame = spawnPoint.CFrame + Vector3.new(0, 3, 0)
+	if result and result.success then
+		-- Teleport success — server handles actual teleport
+		-- Client just shows feedback (could add screen flash, etc.)
+		print("[GateController] Gate opened:", result.destination)
 	else
-		-- Fallback: teleport ke posisi gate tujuan (kalau ada portal di zona itu)
-		for gateId2, data in pairs(GatesConfig) do
-			if data.destinationZone == destination then
-				-- Teleport ke posisi portal itu
-				hrp.CFrame = CFrame.new(data.worldPosition + Vector3.new(0, 3, 10))
-				break
-			end
+		warn("[GateController] Gate denied:", result and result.reason)
+		-- Show error in UI
+		if self._confirmUI then
+			self._confirmUI:Hide()
 		end
 	end
+
+	self._pendingGateId = nil
 end
 
 return GateController
