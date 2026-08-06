@@ -409,7 +409,8 @@ task.spawn(function()
 	local q6 = QuestService:AcceptQuest(player, "Q_OpenGate_Duskwood")
 	print(("  📊 AcceptQuest('OpenGate_Duskwood') Lv%d: %s (%s)"):format(
 		data.Level, tostring(q6.success), tostring(q6.reason or "OK")))
-	assert_true("OpenGate_Duskwood accepted (Lv40 >= Lv8)", q6.success)
+	-- Note: OpenGate_Duskwood butuh WolfThreat selesai — belum, jadi tolak
+	assert_true("OpenGate_Duskwood ditolak (prereq WolfThreat belum selesai)", not q6.success)
 
 	-- 6i. Complete WolfThreat (kill 5 wolves)
 	for i = 1, 5 do
@@ -419,6 +420,11 @@ task.spawn(function()
 	print(("  📊 CompleteQuest('WolfThreat'): %s, exp=%d, soft=%d"):format(
 		tostring(q7.success), q7.rewards and q7.rewards.exp or 0, q7.rewards and q7.rewards.softCurrency or 0))
 	assert_true("WolfThreat completed", q7.success)
+
+	-- 6j. Sekarang baru bisa accept OpenGate_Duskwood
+	local q6b = QuestService:AcceptQuest(player, "Q_OpenGate_Duskwood")
+	print(("  📊 AcceptQuest('OpenGate_Duskwood') setelah WolfThreat: %s"):format(tostring(q6b.success)))
+	assert_true("OpenGate_Duskwood accepted (prereq met)", q6b.success)
 
 	-- 6j. GetAvailableQuests
 	local avail = QuestService:GetAvailableQuests(player)
