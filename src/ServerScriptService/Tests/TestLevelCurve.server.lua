@@ -296,8 +296,9 @@ task.spawn(function()
 	end
 	print(string.rep("=", 60))
 
-	-- Cleanup: hapus DataStore supaya next join = fresh profile
-	task.wait(1) -- tunggu profile di-save dulu
-	DataService.DeleteStoredData(player)
-	print("\n🧹 DataStore dihapus — next join = fresh profile (UI character creation muncul)")
+	-- Cleanup: reset ke template supaya saat player leave, Release() simpan
+	-- data fresh (bukan data test Lv42). DeleteStoredData TIDAK dipakai karena
+	-- Release() akan save ulang setelah delete.
+	DataService.ResetToTemplate(player)
+	print("\n🧹 Profile di-reset ke template — next join = fresh profile")
 end)
