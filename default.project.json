@@ -1,0 +1,45 @@
+{
+  "name": "ArcadiaOnline",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/ReplicatedStorage/Shared"
+      },
+      "Configs": {
+        "$path": "src/ReplicatedStorage/Configs"
+      },
+      "Remotes": {
+        "$path": "src/ReplicatedStorage/Remotes"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Services": {
+        "$path": "src/ServerScriptService/Services"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "Private": {
+        "$path": "src/ServerStorage/Private"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Controllers": {
+          "$path": "src/StarterPlayerScripts/Controllers"
+        }
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "UI": {
+        "$path": "src/StarterGui/UI"
+      }
+    }
+  }
+}

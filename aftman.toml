@@ -1,0 +1,4 @@
+# Version pinning tools (Aftman). Install Aftman lalu jalankan `aftman install`
+# di root project ini supaya semua kontributor pakai versi Rojo yang sama.
+[tools]
+rojo = "rojo-rbx/rojo@7.4.4"
