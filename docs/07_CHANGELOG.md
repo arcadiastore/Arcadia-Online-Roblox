@@ -17,6 +17,19 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] QuestService — tested ✅
+### Ditambahkan
+- `QuestService/init.lua` (ServerScriptService/Services): server-authoritative
+  quest system. API: `AcceptQuest`, `ReportProgress` (server-side only, anti-cheat),
+  `CompleteQuest`, `GetQuestLog`, `GetAvailableQuests`. Remote `Quest/Accept`,
+  `Quest/Complete`, `Quest/GetLog` (masing-masing rate-limited).
+- `Configs/Quests.lua`: 20 quest definitions — Main (Millhaven intro, wolf, herbs),
+  Gate unlock (Duskwood, Frostpeak), Job change (6x Tier2, 6x Tier3), Daily
+  repeatable (wolf hunt, herb run). Objective types: Kill, Collect, Talk, Explore.
+- Remote model: `Quest/GetLog`, `Quest/Accept`, `Quest/Complete`.
+
+---
+
 ## [2026-08-06] JobChangeService — tested ✅
 ### Ditambahkan
 - `JobChangeService/init.lua` (ServerScriptService/Services): server-authoritative
