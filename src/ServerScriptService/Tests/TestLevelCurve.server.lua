@@ -1,6 +1,6 @@
 --[[
-	TestLevelCurve.server.lua (v3 — full otomatis)
-	Tinggal Play Solo, cek Output. Tidak perlu Command Bar.
+	TestLevelCurve.server.lua (v4 — full otomatis)
+	Tinggal Play Solo, cek Output.
 
 	HAPUS file ini sebelum publish ke production.
 ]]
@@ -97,14 +97,19 @@ section("Race + Base combo")
 assert_eq("Angel STR lv1", LevelCurve.GetBaseStats(1).STR + RacesConfig.Angel.statBonus.STR, 2)
 assert_true("Angel STR > 0", LevelCurve.GetBaseStats(1).STR + RacesConfig.Angel.statBonus.STR > 0)
 
+-- Summary bagian 1
+print("\n" .. string.rep("=", 60))
+print(("BAGIAN 1: %d passed, %d failed"):format(passed, failed))
+if failed == 0 then print("🎉 LevelCurve ALL PASS!") end
+print(string.rep("=", 60))
+
 -- ============================================================
--- BAGIAN 2: CharacterService + LevelService (tunggu player)
+-- BAGIAN 2 & 3: CharacterService + LevelService (tunggu player)
 -- ============================================================
 task.spawn(function()
 	local player = Players.PlayerAdded:Wait()
 	print(("\n\n🎮 Player '%s' joined"):format(player.Name))
 
-	-- Tunggu profile
 	local DataService = require(ServerScriptService.Services.DataService)
 	local CharacterService = require(ServerScriptService.Services.CharacterService)
 	local LevelService = require(ServerScriptService.Services.LevelService)
@@ -123,8 +128,9 @@ task.spawn(function()
 		return
 	end
 
-	print(("  ✅ Profile: Lv%d, Race=%s, Class=%s"):format(
-		data.Level, tostring(data.RaceId), tostring(data.ClassId)))
+	print(("  ✅ Profile: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d"):format(
+		data.Level, tostring(data.RaceId), tostring(data.ClassId),
+		data.Stats.STR, data.UnspentCombatPoints))
 
 	-- === Character creation (kalau belum) ===
 	if not data.RaceId or not data.ClassId then
@@ -156,44 +162,59 @@ task.spawn(function()
 	-- === LevelService tests ===
 	section("BAGIAN 3: LevelService")
 
-	print(("  📊 Start: Lv%d, EXP=%d, STR=%d, CP=%d"):format(
-		data.Level, data.Exp, data.Stats.STR, data.UnspentCombatPoints))
+	local isMaxLevel = data.Level >= LevelCurve.MaxLevel
 
-	-- AddExp kecil
-	local r1 = LevelService:AddExp(player, 1)
-	print(("  📊 +1 EXP → Lv%d, EXP=%d"):format(r1.newLevel, r1.newExp))
+	if isMaxLevel then
+		print(("  ℹ️  Player sudah Lv%d (max) — skip level-up test"):format(data.Level))
+		print("  ℹ️  (Reset data player di DataStore untuk test level-up)")
 
-	-- AddExp cukup untuk level-up
-	local need = LevelCurve.GetRequiredExp(data.Level)
-	local r2 = LevelService:AddExp(player, need + 100)
-	print(("  📊 +%d EXP → gained=%d, Lv%d"):format(need + 100, r2.levelsGained, r2.newLevel))
-	assert_true("Level naik", r2.levelsGained >= 1)
+		-- Test EXP overflow di max level
+		local r1 = LevelService:AddExp(player, 100)
+		print(("  📊 AddExp(100) di max level: gained=%d, Lv%d, EXP=%d"):format(
+			r1.levelsGained, r1.newLevel, r1.newExp))
+		assert_eq("Level tetap max", r1.newLevel, LevelCurve.MaxLevel)
+		assert_true("EXP tetap naik", r1.newExp > data.Exp)
+	else
+		print(("  📊 Start: Lv%d, EXP=%d"):format(data.Level, data.Exp))
 
-	-- Multiple level-up
-	local r3 = LevelService:AddExp(player, 50000)
-	print(("  📊 +50000 EXP → gained=%d, Lv%d, EXP=%d"):format(
-		r3.levelsGained, r3.newLevel, r3.newExp))
-	assert_true("Multiple level-up", r3.levelsGained >= 1)
+		-- AddExp kecil
+		local r1 = LevelService:AddExp(player, 1)
+		print(("  📊 +1 EXP → Lv%d, EXP=%d"):format(r1.newLevel, r1.newExp))
 
-	-- Cek CP
+		-- AddExp cukup untuk level-up
+		local need = LevelCurve.GetRequiredExp(data.Level)
+		local r2 = LevelService:AddExp(player, need + 100)
+		print(("  📊 +%d EXP → gained=%d, Lv%d"):format(need + 100, r2.levelsGained, r2.newLevel))
+		assert_true("Level naik", r2.levelsGained >= 1)
+
+		-- Multiple level-up
+		local r3 = LevelService:AddExp(player, 50000)
+		print(("  📊 +50000 → gained=%d, Lv%d"):format(r3.levelsGained, r3.newLevel))
+		assert_true("Multiple level-up", r3.levelsGained >= 1)
+	end
+
+	-- AllocateCP (selalu test, mau max level atau tidak)
 	local cp = LevelService:GetUnspentPoints(player)
 	print(("  📊 UnspentCP: %d"):format(cp))
-	assert_true("CP > 0", cp > 0)
 
-	-- AllocateCP
-	local a1 = LevelService:AllocateCP(player, "STR")
-	print(("  📊 AllocateCP STR: %s, sisa CP=%d"):format(tostring(a1.success), a1.unspentPoints))
-	assert_true("AllocateCP sukses", a1.success)
-	assert_true("CP berkurang", a1.unspentPoints < cp)
+	if cp > 0 then
+		local a1 = LevelService.AllocateCP(player, "STR")
+		print(("  📊 AllocateCP('STR'): %s, sisa=%s"):format(
+			tostring(a1.success), tostring(a1.unspentPoints)))
+		assert_true("AllocateCP sukses", a1.success)
+		assert_true("CP berkurang", a1.unspentPoints < cp)
+	else
+		print("  ℹ️  CP = 0 — skip AllocateCP test (butuh level-up dulu)")
+	end
 
-	-- Reject invalid
-	local a2 = LevelService:AllocateCP(player, "INVALID")
-	print(("  📊 AllocateCP INVALID: %s (%s)"):format(tostring(a2.success), tostring(a2.reason)))
+	local a2 = LevelService.AllocateCP(player, "INVALID")
+	print(("  📊 AllocateCP('INVALID'): %s (%s)"):format(
+		tostring(a2.success), tostring(a2.reason)))
 	assert_true("INVALID ditolak", not a2.success)
 
 	-- Final
-	print(("\n  📊 FINAL: Lv%d, STR=%d, CP=%d"):format(
-		data.Level, data.Stats.STR, data.UnspentCombatPoints))
+	print(("\n  📊 FINAL: Lv%d, STR=%d, CP=%d, EXP=%d"):format(
+		data.Level, data.Stats.STR, data.UnspentCombatPoints, data.Exp))
 
 	-- ============================================================
 	-- SUMMARY

@@ -130,29 +130,7 @@ function LevelService:Start()
 		if not ok then
 			return { success = false, reason = err }
 		end
-
-		if not VALID_STATS[statName] then
-			return { success = false, reason = "Stat tidak valid" }
-		end
-
-		local data = dataService.WaitForProfile(player, 10)
-		if not data then
-			return { success = false, reason = "Profile belum siap" }
-		end
-
-		-- Harus sudah selesai character creation
-		if not data.RaceId or not data.ClassId then
-			return { success = false, reason = "Selesaikan pembuatan karakter terlebih dahulu" }
-		end
-
-		if data.UnspentCombatPoints <= 0 then
-			return { success = false, reason = "Tidak ada Combat Points tersisa" }
-		end
-
-		data.UnspentCombatPoints -= 1
-		data.Stats[statName] += 1
-
-		return { success = true, unspentPoints = data.UnspentCombatPoints }
+		return LevelService.AllocateCP(player, statName)
 	end)
 
 	-- === Simpan reference ke levelUpEvent untuk dipakai di AddExp ===
@@ -242,6 +220,37 @@ end
 function LevelService:GetUnspentPoints(player): number
 	local data = self._dataService.GetProfile(player)
 	return data and data.UnspentCombatPoints or 0
+end
+
+--[[
+	Alokasi 1 Combat Point ke stat tertentu. Bisa dipanggil dari remote
+	(client→server) atau dari Service/test lain (server-only).
+
+	  statName: "STR" | "VIT" | "INT" | "AGI" | "LUK"
+
+	return: { success, reason?, unspentPoints? }
+]]
+function LevelService.AllocateCP(player, statName: string)
+	if not VALID_STATS[statName] then
+		return { success = false, reason = "Stat tidak valid" }
+	end
+
+	local ds = BaseService.GetServiceByName(DATA_SERVICE_NAME)
+	local data = ds and ds.WaitForProfile(player, 10)
+	if not data then
+		return { success = false, reason = "Profile belum siap" }
+	end
+	if not data.RaceId or not data.ClassId then
+		return { success = false, reason = "Selesaikan pembuatan karakter terlebih dahulu" }
+	end
+	if data.UnspentCombatPoints <= 0 then
+		return { success = false, reason = "Tidak ada Combat Points tersisa" }
+	end
+
+	data.UnspentCombatPoints -= 1
+	data.Stats[statName] += 1
+
+	return { success = true, unspentPoints = data.UnspentCombatPoints }
 end
 
 return LevelService
