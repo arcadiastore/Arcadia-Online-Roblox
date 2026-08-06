@@ -778,10 +778,10 @@ task.spawn(function()
 	CharService2.SelectClass(player, "Warrior")
 	data = DataService.GetProfile(player)
 
-	-- 10a. EnterDungeon tanpa party → tolak
-	local d1 = DungeonService:EnterDungeon(player, "Dungeon_SunkenCrypt")
-	print(("  📊 EnterDungeon (no party): %s (%s)"):format(tostring(d1.success), tostring(d1.reason)))
-	assert_true("No party → tolak", not d1.success)
+	-- 10a. EnterDungeon invalid dungeonId → tolak
+	local d1 = DungeonService:EnterDungeon(player, "Dungeon_Fake")
+	print(("  📊 EnterDungeon (invalid): %s (%s)"):format(tostring(d1.success), tostring(d1.reason)))
+	assert_true("Invalid dungeon → tolak", not d1.success)
 
 	-- 10b. Create party
 	PartyService:CreateParty(player)
@@ -800,7 +800,7 @@ task.spawn(function()
 
 	-- 10e. Level up ke Lv15 untuk CorruptedGrove
 	for i = 1, 15 do
-		LevelService:AddExp(player, LevelCurve.CalculateRequiredExp(i))
+		LevelService:AddExp(player, LevelCurveConfig.CalculateRequiredExp(i))
 	end
 	task.wait(0.1)
 	data = DataService.GetProfile(player)
