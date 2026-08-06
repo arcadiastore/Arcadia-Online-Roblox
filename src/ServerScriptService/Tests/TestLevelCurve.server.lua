@@ -295,4 +295,9 @@ task.spawn(function()
 		warn(("⚠️  %d GAGAL"):format(failed))
 	end
 	print(string.rep("=", 60))
+
+	-- Cleanup: hapus DataStore supaya next join = fresh profile
+	task.wait(1) -- tunggu profile di-save dulu
+	DataService.DeleteStoredData(player)
+	print("\n🧹 DataStore dihapus — next join = fresh profile (UI character creation muncul)")
 end)

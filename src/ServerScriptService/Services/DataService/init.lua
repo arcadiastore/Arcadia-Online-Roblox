@@ -109,11 +109,23 @@ function DataService.ResetToTemplate(player)
 	local profile = playerProfiles[player.UserId]
 	if not profile then return false end
 
-	-- Deep copy template supaya tidak mengacu ke table yang sama
 	local fresh = TableUtil.DeepCopy(ProfileTemplate)
 	profile.Data = fresh
 	profile:Save()
 	return true
+end
+
+-- (HANYA untuk testing/debug) Hapus DataStore key supaya next join = fresh.
+-- Profile di-memory tetap aktif sampai player leave.
+function DataService.DeleteStoredData(player)
+	local key = DataConstants.ProfileKeyPrefix .. tostring(player.UserId)
+	local ok, err = pcall(function()
+		store._dataStore:RemoveAsync(key)
+	end)
+	if not ok then
+		warn("[DataService] DeleteStoredData gagal:", err)
+	end
+	return ok
 end
 
 return DataService.GetProfile(player)
@@ -173,11 +185,23 @@ function DataService.ResetToTemplate(player)
 	local profile = playerProfiles[player.UserId]
 	if not profile then return false end
 
-	-- Deep copy template supaya tidak mengacu ke table yang sama
 	local fresh = TableUtil.DeepCopy(ProfileTemplate)
 	profile.Data = fresh
 	profile:Save()
 	return true
+end
+
+-- (HANYA untuk testing/debug) Hapus DataStore key supaya next join = fresh.
+-- Profile di-memory tetap aktif sampai player leave.
+function DataService.DeleteStoredData(player)
+	local key = DataConstants.ProfileKeyPrefix .. tostring(player.UserId)
+	local ok, err = pcall(function()
+		store._dataStore:RemoveAsync(key)
+	end)
+	if not ok then
+		warn("[DataService] DeleteStoredData gagal:", err)
+	end
+	return ok
 end
 
 return DataService
