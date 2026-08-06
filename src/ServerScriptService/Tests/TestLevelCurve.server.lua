@@ -541,7 +541,8 @@ task.spawn(function()
 	end
 	assert_true("Has SlashCombo", hasSlash)
 
-	-- 7k. Mana test — Wolf 40 HP, one-shot. Pakai skill beda.
+	-- 7k. Mana test — tunggu cooldown expired dulu
+	task.wait(2)
 	CombatService:SetPlayerMana(player, 30)
 	local wolfId2 = CombatService:SpawnEnemy("Enemy_Wolf")
 	-- WarCry cost 15, SlashCombo cost 5. Total 20 < 30 → OK
