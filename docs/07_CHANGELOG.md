@@ -17,6 +17,27 @@ Entri terbaru selalu ditambahkan di **paling atas** file ini, di bawah baris ini
 
 ---
 
+## [2026-08-06] Gate/Portal system — tested ✅
+### Ditambahkan
+- `GateService.lua` (ServerScriptService/Services): server-authoritative gate
+  system. API: `TryOpenGate`, `GetUnlockedGates`, `IsGateUnlocked`. Remote
+  `Gate/RequestOpen` (rate-limited 1s). Validasi: Level, Quest (CompletedQuests),
+  Item (Inventory), LevelAndQuest. Unlock disimpan di `profile.UnlockedGates`.
+- `GatePortalBuilder.server.lua`: spawn 3D portal di workspace (20-segment
+  glowing ring, inner surface, particles, PointLight, ProximityPrompt, BillboardGui
+  label). Juga buat zone spawn points.
+- `GateController.lua` (StarterPlayerScripts/Controllers): detect ProximityPrompt,
+  tampilkan UI confirm, handle request open + teleport.
+- `GateConfirm/init.lua` (StarterGui/UI): overlay + card konfirmasi (gate name,
+  destination, requirements, confirm/cancel buttons).
+- `CompletedQuests` field di ProfileTemplate (dipakai GateService).
+- Remote model: `Gate/RequestOpen`, `Gate/GateOpened`.
+### Diperbaiki
+- Gate model.json: hapus `Name` field (Rojo 6.0 warning).
+- GatePortalBuilder ditambahkan ke `default.project.json`.
+
+---
+
 ## [2026-08-06] CharacterCreation UI — tested ✅
 ### Ditambahkan
 - `CharacterCreation/init.lua` (StarterGui/UI): full race reveal + class select

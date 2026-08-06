@@ -31,7 +31,7 @@
 | Sistem elemen — implementasi combat | ⬜ | Data sudah siap, logic Service belum |
 | Sistem combat dasar (attack + skill) | ⬜ | |
 | Desain Zona & Gate final (Millhaven → Shattered Sanctum) | ✅ | Lihat `01_GDD.md` §6, data gate di `Configs/Gates.lua` |
-| Gate/Portal system — implementasi | ⬜ | Data sudah siap, logic Service belum |
+| Gate/Portal system — implementasi | ✅ | `GateService.lua` (server): validasi syarat Level/Quest/Item, unlock gate, simpan ke `UnlockedGates`. Remote `Gate/RequestOpen` (rate-limited 1s). Tested: fake gate ditolak, LevelAndQuest (level OK + quest), idempotent unlock, Frostpeak ditolak (no quest). 3D portal builder + GateUI confirm + GateController. |
 | Zona 1 (Millhaven) — build/implementasi | ⬜ | |
 | Dungeon instance pertama (The Sunken Crypt) | ⬜ | |
 | Quest system (main quest) | ⬜ | `Configs/Quests.lua` masih skeleton kosong; id quest job-change/gate sudah direferensikan di Classes.lua & Gates.lua sebagai placeholder |
