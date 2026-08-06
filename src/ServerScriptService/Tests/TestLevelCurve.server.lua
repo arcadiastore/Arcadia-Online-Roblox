@@ -696,6 +696,73 @@ task.spawn(function()
 
 	print(("  📊 FINAL: Inventory test complete, Lv%d"):format(data.Level))
 
+	-- ========================================
+	-- BAGIAN 9: PartyService
+	-- ========================================
+	section("BAGIAN 9: PartyService")
+
+	local PartyService = require(ServerScriptService.Services.PartyService)
+
+	-- Reset + setup
+	DataService.ResetToTemplate(player)
+	task.wait(0.2)
+	CharService2.RerollRace(player)
+	CharService2.ConfirmRace(player, "Human")
+	CharService2.SelectClass(player, "Warrior")
+	data = DataService.GetProfile(player)
+
+	-- 9a. GetPartyInfo (belum di party)
+	local p1 = PartyService:GetPartyInfo(player)
+	print(("  📊 GetPartyInfo (no party): inParty=%s"):format(tostring(p1.inParty)))
+	assert_true("Belum di party", not p1.inParty)
+
+	-- 9b. LeaveParty (belum di party)
+	local p2 = PartyService:LeaveParty(player)
+	print(("  📊 LeaveParty (no party): %s (%s)"):format(tostring(p2.success), tostring(p2.reason)))
+	assert_true("Leave tanpa party → tolak", not p2.success)
+
+	-- 9c. CreateParty
+	local p3 = PartyService:CreateParty(player)
+	print(("  📊 CreateParty: %s, partyId=%s, role=%s"):format(
+		tostring(p3.success), tostring(p3.partyId):sub(1, 8), tostring(p3.role)))
+	assert_true("Party created", p3.success)
+	assert_eq("Role = Leader", p3.role, "Leader")
+
+	-- 9d. CreateParty lagi (sudah di party)
+	local p4 = PartyService:CreateParty(player)
+	print(("  📊 CreateParty lagi: %s (%s)"):format(tostring(p4.success), tostring(p4.reason)))
+	assert_true("Sudah di party → tolak", not p4.success)
+
+	-- 9e. GetPartyInfo (sudah di party)
+	local p5 = PartyService:GetPartyInfo(player)
+	print(("  📊 GetPartyInfo: inParty=%s, members=%d, leader=%s"):format(
+		tostring(p5.inParty), p5.memberCount or 0, tostring(p5.leaderId == player.UserId)))
+	assert_true("In party", p5.inParty)
+	assert_eq("1 member", p5.memberCount, 1)
+	assert_true("Is leader", p5.leaderId == player.UserId)
+
+	-- 9f. Kick diri sendiri → tolak
+	local p6 = PartyService:KickPlayer(player, player.UserId)
+	print(("  📊 Kick self: %s (%s)"):format(tostring(p6.success), tostring(p6.reason)))
+	assert_true("Kick self → tolak", not p6.success)
+
+	-- 9g. LeaveParty
+	local p7 = PartyService:LeaveParty(player)
+	print(("  📊 LeaveParty: %s"):format(tostring(p7.success)))
+	assert_true("Left party", p7.success)
+
+	-- 9h. Cek PartyId di profile
+	data = DataService.GetProfile(player)
+	print(("  📊 Profile.PartyId after leave: %s"):format(tostring(data.PartyId)))
+	assert_true("PartyId nil", data.PartyId == nil)
+
+	-- 9i. Create party lagi untuk test invite (butuh 2nd player — skip)
+	-- Di production, test dengan 2 player. Untuk sekarang, test internal logic.
+	local p8 = PartyService:CreateParty(player)
+	assert_true("Party re-created", p8.success)
+
+	print(("  📊 FINAL: Party test complete"))
+
 	-- Final
 	print(("\n  📊 FINAL: Lv%d, Race=%s, Class=%s, STR=%d, CP=%d, EXP=%d"):format(
 		data.Level, tostring(data.RaceId), tostring(data.ClassId),

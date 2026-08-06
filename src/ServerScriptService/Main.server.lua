@@ -24,6 +24,7 @@ local JobChangeService = require(ServicesFolder:WaitForChild("JobChangeService")
 local QuestService = require(ServicesFolder:WaitForChild("QuestService"))
 local CombatService = require(ServicesFolder:WaitForChild("CombatService"))
 local InventoryService = require(ServicesFolder:WaitForChild("InventoryService"))
+local PartyService = require(ServicesFolder:WaitForChild("PartyService"))
 
 local services = {
 	DataService,
@@ -34,6 +35,7 @@ local services = {
 	QuestService,
 	CombatService,
 	InventoryService,
+	PartyService,
 }
 
 -- === Phase 1: Register semua Service ===
