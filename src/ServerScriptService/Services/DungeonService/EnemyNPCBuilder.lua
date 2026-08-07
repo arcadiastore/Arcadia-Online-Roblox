@@ -17,9 +17,12 @@
 ]]
 
 local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local EnemiesConfig = require(ReplicatedStorage:WaitForChild("Configs"):WaitForChild("Enemies"))
+local ClassesConfig = require(ReplicatedStorage:WaitForChild("Configs"):WaitForChild("Classes"))
+local ElementsConfig = require(ReplicatedStorage:WaitForChild("Configs"):WaitForChild("Elements"))
 
 local EnemyNPCBuilder = {}
 
@@ -243,6 +246,63 @@ function EnemyNPCBuilder:Spawn(enemyId: string, position: CFrame): Model?
 
 	-- Parent ke workspace
 	model.Parent = Workspace
+
+	-- ClickDetector untuk attack
+	local clickDetector = Instance.new("ClickDetector")
+	clickDetector.MaxActivationDistance = 15
+	clickDetector.Parent = torso
+
+	-- Click handler — calculate damage, apply to Humanoid
+	clickDetector.MouseClick:Connect(function(clickPlayer)
+		if not clickPlayer or not clickPlayer.Character then return end
+
+		-- Ambil stats attacker
+		local ds = nil
+		local ok, result = pcall(function()
+			local SS = game:GetService("ServerScriptService")
+			local Services = SS:WaitForChild("Services")
+			local DS = require(Services:WaitForChild("DataService"))
+			return DS.GetProfile(clickPlayer)
+		end)
+		if not ok or not result then return end
+		local attackerProfile = result
+		local classId = attackerProfile.ClassId or "Warrior"
+
+		-- Cari multiplier dari Classes config
+		local classData = ClassesConfig[classId]
+		local multiplier = classData and classData.damageMultiplier or 1.0
+
+		-- Element check
+		local attackerElement = "None"
+		if classData and classData.element then
+			attackerElement = classData.element
+		end
+
+		local enemyElement = config.element or "None"
+		local elementMultiplier = 1.0
+		if attackerElement ~= "None" and enemyElement ~= "None" then
+			local pairKey = attackerElement .. "_" .. enemyElement
+			local pairData = ElementsConfig[pairKey]
+			if pairData then
+				elementMultiplier = pairData.multiplier or 1.0
+			end
+		end
+
+		-- Damage formula: (base + STR * 1.5) * class * element * (100 / (100 + def))
+		local stats = attackerProfile.stats or attackerProfile.Stats or {}
+		local str = stats.STR or 5
+		local baseDmg = 10
+		local rawDmg = baseDmg + str * 1.5
+		local defense = config.defense or 0
+		local defenseFactor = 100 / (100 + defense)
+		local finalDmg = math.max(1, math.floor(rawDmg * multiplier * elementMultiplier * defenseFactor))
+
+		-- Apply damage
+		local npcHumanoid = model:FindFirstChild("Humanoid")
+		if npcHumanoid and npcHumanoid.Health > 0 then
+			npcHumanoid:TakeDamage(finalDmg)
+		end
+	end)
 
 	return model
 end
