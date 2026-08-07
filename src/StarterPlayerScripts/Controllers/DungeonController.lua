@@ -58,6 +58,23 @@ function DungeonController:Start()
 				end)
 				if ok and result and result.success then
 					self:_updateStatus(result)
+
+					-- Completed → show rewards
+					if result.status == "completed" then
+						self:_showRewards(result)
+						self._inDungeon = false
+					end
+
+					-- Failed
+					if result.status == "failed" then
+						self._inDungeon = false
+					end
+
+					-- Not in dungeon anymore (teleported out after completion)
+					if not result.inDungeon and not self._showingRewards then
+						self._inDungeon = false
+						self._statusScreen.Enabled = false
+					end
 				end
 			end
 		end
@@ -434,6 +451,7 @@ function DungeonController:_buildRewardsUI()
 	okBtn.Activated:Connect(function()
 		screen.Enabled = false
 		self._inDungeon = false
+		self._showingRewards = false
 		self._statusScreen.Enabled = false
 	end)
 end
@@ -470,43 +488,33 @@ function DungeonController:_updateStatus(result)
 
 	-- Status
 	if result.status == "completed" then
-		self._statusLabel.Text = "✅ COMPLETED!"
+		self._statusLabel.Text = "✅ DUNGEON COMPLETE!"
 		self._statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-		self._inDungeon = false
-		-- Tampilkan rewards
-		task.wait(1)
-		self:_showRewards(result)
 	elseif result.status == "failed" then
 		self._statusLabel.Text = "❌ FAILED (TIME UP)"
 		self._statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
-		self._inDungeon = false
 	else
-		self._statusLabel.Text = "Status: Active"
-		self._statusLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+		self._statusLabel.Text = ("Wave %d/%d - Fight!"):format(result.wave or 0, result.totalWaves or 0)
+		self._statusLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
 	end
 end
 
 function DungeonController:_showRewards(result)
+	self._showingRewards = true
 	self._rewardsScreen.Enabled = true
 
-	local config = result.config or {}
 	local lines = {}
 	table.insert(lines, "🏆 Dungeon Cleared!")
 	table.insert(lines, "")
 
-	if config.rewards then
-		if config.rewards.exp then
-			table.insert(lines, ("  ✦ EXP: +%d"):format(config.rewards.exp))
-		end
-		if config.rewards.softCurrency then
-			table.insert(lines, ("  ✦ Gold: +%d"):format(config.rewards.softCurrency))
-		end
-		if config.rewards.items then
-			for _, item in ipairs(config.rewards.items) do
-				table.insert(lines, ("  ✦ %s ×%d"):format(item.itemId, item.quantity))
-			end
-		end
+	if result.dungeonName then
+		table.insert(lines, "  📍 " .. result.dungeonName)
+		table.insert(lines, "")
 	end
+
+	-- Tampilkan EXP dan currency dari status
+	table.insert(lines, "  ✦ Rewards distributed!")
+	table.insert(lines, "  ✦ Check your inventory")
 
 	self._rewardsText.Text = table.concat(lines, "\n")
 end

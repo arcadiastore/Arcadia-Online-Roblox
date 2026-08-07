@@ -434,11 +434,16 @@ function DungeonService:_completeDungeon(instanceId: string)
 					end
 				end
 			end
+		end
+	end
 
-			-- Clear dungeon reference
+	-- Tunggu supaya status poll bisa baca "completed" SEBELUM teleport
+	task.wait(5)
+
+	for _, member in ipairs(members) do
+		local memberProfile = ds and ds.WaitForProfile(member, 10)
+		if memberProfile then
 			memberProfile.DungeonId = nil
-
-			-- Teleport balik ke spawn utama (Millhaven)
 			self:_teleportToSpawn(member)
 		end
 	end
