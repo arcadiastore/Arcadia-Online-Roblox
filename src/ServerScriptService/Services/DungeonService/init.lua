@@ -438,20 +438,22 @@ function DungeonService:_completeDungeon(instanceId: string)
 	end
 
 	-- Tunggu supaya status poll bisa baca "completed" SEBELUM teleport
-	task.wait(5)
-
-	for _, member in ipairs(members) do
-		local memberProfile = ds and ds.WaitForProfile(member, 10)
-		if memberProfile then
-			memberProfile.DungeonId = nil
-			self:_teleportToSpawn(member)
+	-- Player akan klik OK di rewards popup → trigger LeaveDungeon
+	-- Auto-teleport setelah 30 detik sebagai fallback
+	task.delay(30, function()
+		if self._instances[instanceId] and self._instances[instanceId].status == "completed" then
+			for _, member in ipairs(members) do
+				local memberProfile = ds and ds.WaitForProfile(member, 10)
+				if memberProfile and memberProfile.DungeonId == instanceId then
+					memberProfile.DungeonId = nil
+					self:_teleportToSpawn(member)
+				end
+			end
+			task.wait(2)
+			DungeonZoneBuilder:DestroyZone(instance.configId)
+			self._instances[instanceId] = nil
 		end
-	end
-
-	-- Cleanup zone
-	task.wait(5)
-	DungeonZoneBuilder:DestroyZone(instance.configId)
-	self._instances[instanceId] = nil
+	end)
 end
 
 function DungeonService:_cleanupInstance(instanceId: string)

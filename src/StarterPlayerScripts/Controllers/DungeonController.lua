@@ -453,6 +453,11 @@ function DungeonController:_buildRewardsUI()
 		self._inDungeon = false
 		self._showingRewards = false
 		self._statusScreen.Enabled = false
+
+		-- Call server untuk teleport balik
+		pcall(function()
+			self._remoteLeave:InvokeServer()
+		end)
 	end)
 end
 
