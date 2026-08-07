@@ -917,6 +917,7 @@ task.spawn(function()
 	-- Cleanup: reset ke template supaya saat player leave, Release() simpan
 	-- data fresh (bukan data test Lv42). DeleteStoredData TIDAK dipakai karena
 	-- Release() akan save ulang setelah delete.
-	DataService.ResetToTemplate(player)
-	print("\n🧹 Profile di-reset ke template — next join = fresh profile")
+	-- UNCOMMENT untuk reset profile setelah test:
+	-- DataService.ResetToTemplate(player)
+	-- print("\n🧹 Profile di-reset ke template — next join = fresh profile")
 end)
