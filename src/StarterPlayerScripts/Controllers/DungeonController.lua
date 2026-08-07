@@ -33,6 +33,7 @@ function DungeonController:Init()
 	local remotes = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Dungeon")
 	self._remoteEnter = remotes:WaitForChild("Enter")
 	self._remoteStatus = remotes:WaitForChild("GetStatus")
+	self._remoteLeave = remotes:WaitForChild("Leave")
 
 	-- State
 	self._inDungeon = false
@@ -67,7 +68,12 @@ function DungeonController:Start()
 
 	-- Leave button
 	self._leaveBtn.Activated:Connect(function()
-		self._statusPanel.Visible = false
+		print("[DungeonController] Leave clicked")
+		local ok, result = pcall(function()
+			return self._remoteLeave:InvokeServer()
+		end)
+		print("[DungeonController] Leave result:", ok, result)
+		self._statusScreen.Enabled = false
 		self._inDungeon = false
 	end)
 

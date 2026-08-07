@@ -39,6 +39,7 @@ local LEVEL_SERVICE_NAME = "LevelService"
 
 local REMOTE_ENTER = "Dungeon/Enter"
 local REMOTE_STATUS = "Dungeon/GetStatus"
+local REMOTE_LEAVE = "Dungeon/Leave"
 local COOLDOWN_ENTER = 3
 
 local DungeonService = BaseService:Extend("DungeonService")
@@ -64,6 +65,11 @@ function DungeonService:Start()
 	remotesFolder:WaitForChild("GetStatus").OnServerInvoke =
 		RemoteValidator.new(REMOTE_STATUS, 1):WrapHandler(function(player)
 			return selfRef:GetStatus(player)
+		end)
+
+	remotesFolder:WaitForChild("Leave").OnServerInvoke =
+		RemoteValidator.new(REMOTE_LEAVE, 1):WrapHandler(function(player)
+			return selfRef:LeaveDungeon(player)
 		end)
 end
 
@@ -136,8 +142,21 @@ function DungeonService:EnterDungeon(player: Player, dungeonId: string): { [stri
 	local instanceId = dungeonId .. "_" .. tostring(os.time())
 	
 	-- Build dungeon zone 3D
-	DungeonZoneBuilder:BuildZone(dungeonId)
+	local zone = DungeonZoneBuilder:BuildZone(dungeonId)
 	local playerSpawn = DungeonZoneBuilder:GetPlayerSpawn(dungeonId)
+
+	-- Wire exit portal → LeaveDungeon
+	if zone then
+		local exitPortal = zone:FindFirstChild("ExitPortal")
+		if exitPortal then
+			local prompt = exitPortal:FindFirstChild("ProximityPrompt")
+			if prompt then
+				prompt.Triggered:Connect(function(triggerPlayer)
+					self:LeaveDungeon(triggerPlayer)
+				end)
+			end
+		end
+	end
 
 	-- Simpan instance
 	self._instances[instanceId] = {
@@ -222,6 +241,45 @@ function DungeonService:GetStatus(player: Player): { [string]: any }
 		timeLimit = timeLimit,
 		aliveEnemies = self:_countAliveEnemies(instanceId),
 	}
+end
+
+--- Leave dungeon + teleport balik
+function DungeonService:LeaveDungeon(player: Player): { [string]: any }
+	local ds = BaseService.GetServiceByName(DATA_SERVICE_NAME)
+	local profile = ds and ds.WaitForProfile(player, 10)
+	if not profile then return { success = false, reason = "Profile belum siap" } end
+
+	local instanceId = profile.DungeonId
+	if not instanceId then
+		return { success = false, reason = "Tidak di dungeon" }
+	end
+
+	local instance = self._instances[instanceId]
+	if not instance then
+		profile.DungeonId = nil
+		return { success = true }
+	end
+
+	-- Hapus player dari dungeon
+	profile.DungeonId = nil
+	self:_teleportToSpawn(player)
+
+	-- Cek apakah masih ada player di dungeon
+	local anyPlayerLeft = false
+	for _, plr in ipairs(Players:GetPlayers()) do
+		local prof = ds and ds.WaitForProfile(plr, 10)
+		if prof and prof.DungeonId == instanceId then
+			anyPlayerLeft = true
+			break
+		end
+	end
+
+	-- Kalau tidak ada player tersisa → cleanup
+	if not anyPlayerLeft then
+		self:_cleanupInstance(instanceId)
+	end
+
+	return { success = true }
 end
 
 --- Force keluar dungeon
